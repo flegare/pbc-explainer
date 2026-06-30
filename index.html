@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="meta.title">Pixel Block Chain — How it works, in plain English</title>
+<meta name="description" data-i18n="meta.desc" content="A plain-language guide to the Pixel Block Chain research paper: hiding a tamper-proof seal inside image pixels.">
+<style>
+  :root{
+    --bg:#080b10; --bg2:#0f141c; --bg3:#161d27; --panel:#121821;
+    --ink:#e9eff6; --muted:#9aa8b6; --faint:#6b7a89;
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+    --green:#34d399; --yellow:#fbbf24; --red:#f87171; --gray:#5b6878;
+    --accent:#38bdf8; --accent2:#818cf8;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --wrap:740px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    font-size:18px;line-height:1.7;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(1200px 600px at 80% -10%,rgba(56,189,248,.10),transparent 60%),
+                     radial-gradient(900px 500px at 0% 10%,rgba(129,140,248,.08),transparent 55%);
+  }
+  ::selection{background:rgba(56,189,248,.3)}
+  #bar{position:fixed;top:0;left:0;height:3px;width:0;z-index:60;
+    background:linear-gradient(90deg,var(--green),var(--accent));transition:width .1s linear}
+  /* language switcher */
+  .langbar{position:fixed;top:14px;left:14px;z-index:70;display:flex;gap:4px;
+    background:rgba(15,20,28,.82);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:999px;padding:5px}
+  .langbar button{font:600 13px var(--sans);color:var(--muted);background:transparent;border:0;
+    padding:5px 11px;border-radius:999px;cursor:pointer;transition:.15s;letter-spacing:.03em}
+  .langbar button:hover{color:var(--ink)}
+  .langbar button.on{background:var(--green);color:#04110b}
+  nav.dots{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:11px}
+  nav.dots a{width:10px;height:10px;border-radius:50%;background:var(--line2);transition:.25s;position:relative}
+  nav.dots a:hover{background:var(--muted);transform:scale(1.25)}
+  nav.dots a.on{background:var(--green);box-shadow:0 0 0 4px rgba(52,211,153,.18)}
+  nav.dots a span{position:absolute;right:18px;top:50%;transform:translateY(-50%);
+    white-space:nowrap;font-size:12px;color:var(--muted);background:var(--bg2);
+    border:1px solid var(--line);padding:2px 8px;border-radius:6px;opacity:0;pointer-events:none;transition:.2s}
+  nav.dots a:hover span{opacity:1}
+  @media(max-width:980px){nav.dots{display:none}}
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 22px}
+  section{padding:64px 0}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(34px,6vw,58px);line-height:1.08;letter-spacing:-.01em;margin:.1em 0 .35em}
+  h2{font-family:var(--serif);font-weight:600;font-size:clamp(26px,4.4vw,38px);line-height:1.15;letter-spacing:-.01em;margin:0 0 .5em}
+  p{margin:0 0 1.05em;color:#dbe3ec}
+  .lead{font-size:21px;color:#e9eff6}
+  .muted{color:var(--muted)}
+  strong{color:#fff;font-weight:650}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56,189,248,.35)}
+  a:hover{border-color:var(--accent)}
+  .hl-green{color:var(--green)}.hl-red{color:var(--red)}.hl-yellow{color:var(--yellow)}.hl-gray{color:var(--gray)}
+  header.hero{min-height:92vh;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+  .hero .wrap{position:relative;z-index:2}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);
+    border:1px solid var(--line);background:rgba(255,255,255,.03);padding:6px 13px;border-radius:999px;margin-bottom:22px}
+  .pill b{color:var(--green);font-weight:600}
+  .sub{font-size:21px;color:var(--muted);max-width:600px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+  .btn{display:inline-block;padding:12px 20px;border-radius:10px;font-size:15px;font-weight:600;border:1px solid var(--line2)}
+  .btn.primary{background:var(--green);color:#04110b;border-color:var(--green)}
+  .btn.ghost{color:var(--ink);background:rgba(255,255,255,.03)}
+  .btn:hover{transform:translateY(-1px)}
+  #heroCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.5}
+  .scrollcue{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:2;color:var(--faint);font-size:12px;letter-spacing:.15em;text-transform:uppercase;animation:bob 2.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(7px)}}
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+  .analogy{border-left:3px solid var(--accent2);background:linear-gradient(90deg,rgba(129,140,248,.08),transparent);
+    padding:14px 18px;border-radius:0 10px 10px 0;margin:1.4em 0;font-size:17px}
+  .analogy b{color:var(--accent2)}
+  details.deep{margin:1.3em 0;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+  details.deep>summary{cursor:pointer;list-style:none;padding:14px 18px;font-weight:600;font-size:15px;color:#cfe;
+    display:flex;align-items:center;gap:10px;user-select:none}
+  details.deep>summary::-webkit-details-marker{display:none}
+  details.deep>summary:before{content:"🔬";font-size:15px}
+  details.deep>summary span.lbl:after{content:attr(data-closed);color:var(--muted);font-weight:400;font-size:13.5px}
+  details.deep[open]>summary span.lbl:after{content:attr(data-open)}
+  details.deep .body{padding:2px 18px 18px;border-top:1px solid var(--line);font-size:16px;color:var(--muted)}
+  details.deep .body p{color:#c3cdd8;font-size:16px}
+  details.deep code,.mono{font-family:var(--mono);font-size:.88em;color:#bfe9ff}
+  .demo{margin:1.6em 0;border:1px solid var(--line);border-radius:16px;background:
+    linear-gradient(180deg,var(--bg2),var(--panel));overflow:hidden;box-shadow:0 20px 50px -30px rgba(0,0,0,.9)}
+  .demo .head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .demo .head .tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#04110b;background:var(--green);padding:3px 8px;border-radius:5px;font-weight:700}
+  .demo .head h4{margin:0;font-size:15.5px;font-weight:650}
+  .demo .stage{padding:18px;display:flex;flex-direction:column;align-items:center;gap:14px}
+  canvas{max-width:100%;touch-action:none;border-radius:10px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
+  button.ui{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--ink);background:var(--bg3);
+    border:1px solid var(--line2);padding:9px 15px;border-radius:9px;cursor:pointer;transition:.15s}
+  button.ui:hover{background:#202935;border-color:var(--muted)}
+  button.ui.accent{background:var(--accent);color:#04121b;border-color:var(--accent)}
+  .readout{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:14px;color:var(--muted)}
+  .readout b{font-family:var(--mono);font-size:18px;display:block;color:var(--ink)}
+  .readout .g b{color:var(--green)} .readout .r b{color:var(--red)} .readout .y b{color:var(--yellow)}
+  .hint{font-size:13px;color:var(--faint);text-align:center}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:.4em 0}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .sw.g{background:var(--green)}.sw.y{background:var(--yellow)}.sw.r{background:var(--red)}.sw.gr{background:var(--gray)}
+  figure{margin:1.6em 0}
+  figure img{width:100%;border-radius:12px;border:1px solid var(--line);display:block;background:#fff}
+  figure figcaption{font-size:13.5px;color:var(--faint);margin-top:8px;text-align:center}
+  .figrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .figrow.two{grid-template-columns:2fr 1fr}
+  @media(max-width:620px){.figrow,.figrow.two{grid-template-columns:1fr}}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:1.4em 0}
+  @media(max-width:620px){.stats{grid-template-columns:1fr 1fr}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 16px;text-align:center}
+  .stat .n{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--green);line-height:1}
+  .stat .l{font-size:12.5px;color:var(--muted);margin-top:7px;letter-spacing:.02em}
+  .ctab{width:100%;border-collapse:collapse;margin:1.2em 0;font-size:15px}
+  .ctab th,.ctab td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  .ctab th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+  .ctab td:first-child{color:#fff;font-weight:600}
+  .yes{color:var(--green)}.no{color:var(--red)}.partial{color:var(--yellow)}
+  .scope{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:1.3em 0}
+  @media(max-width:620px){.scope{grid-template-columns:1fr}}
+  .scope div{border-radius:14px;padding:16px 18px;border:1px solid var(--line)}
+  .scope .works{background:linear-gradient(180deg,rgba(52,211,153,.08),transparent);border-color:rgba(52,211,153,.3)}
+  .scope .nope{background:linear-gradient(180deg,rgba(248,113,113,.08),transparent);border-color:rgba(248,113,113,.3)}
+  .scope h4{margin:0 0 .5em;font-size:16px}
+  .scope ul{margin:0;padding-left:18px;font-size:15px;color:#cfd8e2}
+  .scope li{margin:.3em 0}
+  footer{padding:60px 0 80px;border-top:1px solid var(--line);color:var(--muted);font-size:15px}
+  footer .wrap{display:flex;flex-direction:column;gap:8px}
+  .auth{color:#fff;font-weight:600}
+  hr.soft{border:none;border-top:1px solid var(--line);margin:2.2em 0}
+  .note{font-size:13.5px;color:var(--faint);font-style:italic}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="langbar" id="langbar">
+  <button data-lang="en" class="on">EN</button>
+  <button data-lang="fr">FR</button>
+  <button data-lang="es">ES</button>
+</div>
+<nav class="dots" id="dots"></nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top" data-nav="nav.start">
+  <canvas id="heroCanvas"></canvas>
+  <div class="wrap">
+    <span class="pill"><b>●</b> <span data-i18n="hero.pill">A plain-English guide to the research paper</span></span>
+    <h1>Pixel&nbsp;Block&nbsp;Chain</h1>
+    <p class="sub" data-i18n="hero.sub">A way to hide a tamper-proof "seal" <em>inside the pixels of an image itself</em> — so even after the photo is copied, cropped, and stripped of all its metadata, you can still tell <strong>whether it was altered, and exactly where</strong>.</p>
+    <div class="cta">
+      <a class="btn primary" href="#problem" data-i18n="hero.cta1">Start reading →</a>
+      <a class="btn ghost" href="#tamper" data-i18n="hero.cta2">Jump to the live demos</a>
+    </div>
+  </div>
+  <div class="scrollcue" data-i18n="hero.scroll">scroll</div>
+</header>
+
+<!-- ============ PROBLEM ============ -->
+<section id="problem" data-nav="nav.problem">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="problem.eyebrow">The problem</p>
+    <h2 data-i18n="problem.h2">Photos lose their paper trail</h2>
+    <p class="lead" data-i18n="problem.lead">Every time an image is shared, something quietly strips away its history.</p>
+    <p data-i18n="problem.p1">When you post a photo, send it in a chat, or a news desk re-exports it, the file gets re-saved. That re-saving throws away the hidden "label" — the metadata — that normally records where the image came from and whether it's been edited. The pixels arrive; the story behind them does not.</p>
+    <div class="analogy" data-i18n="problem.analogy"><b>Analogy:</b> Imagine a painting with a certificate of authenticity taped to the back. Photocopy the painting and the certificate is gone — even though the picture itself looks perfect. Today's provenance systems put the certificate on the back. <strong>PBC writes it invisibly into the paint.</strong></div>
+    <p data-i18n="problem.p2">Systems like <strong>C2PA</strong> (the industry standard, backed by Adobe, the BBC, camera makers) attach a cryptographic certificate to the file. It's excellent — <em>as long as the file survives intact</em>. The moment the container is stripped, that certificate is gone and you're left holding only raw pixels with no way to check them.</p>
+    <details class="deep"><summary><span class="lbl" data-closed="Go deeper — the real mechanism" data-open="Hide the details"></span></summary><div class="body">
+      <p data-i18n="problem.deep">PBC is explicitly designed as a <b>complement</b> to C2PA, not a competitor. C2PA proves <i>identity</i> (who made this, signed by a trusted key) at the file-container level. PBC provides <i>tile-local integrity</i> (has any region been altered) at the pixel level — the layer that's still there when the container is gone. The paper frames PBC for <code>lossless / near-lossless</code> channels: archival masters, editorial hand-offs, wire-service exchanges.</p>
+    </div></details>
+  </div>
+</section>
+
+<!-- ============ BIG IDEA ============ -->
+<section id="idea" data-nav="nav.idea">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="idea.eyebrow">The big idea</p>
+    <h2 data-i18n="idea.h2">Hide the seal in the pixels</h2>
+    <p data-i18n="idea.p1">Every pixel is a number — say, how much red, green and blue it has. PBC nudges the <strong>very last digit</strong> of each of those numbers. The last digit is so insignificant that your eye can't possibly see the change, but there's enough room across millions of pixels to tuck away a hidden message.</p>
+    <p data-i18n="idea.p2">That hidden message is a chain of tiny <strong>tamper-evident blocks</strong> — like a row of wax seals, where each seal is stamped using the one before it. Break a seal and the chain no longer lines up.</p>
+    <div class="demo">
+      <div class="head"><span class="tag">Demo 1</span><h4 data-i18n="demo1.head">The change is invisible to you — but it's there</h4></div>
+      <div class="stage">
+        <canvas id="lsbCanvas" width="640" height="240"></canvas>
+        <div class="controls">
+          <button class="ui accent" id="lsbReveal" data-i18n="lsb.reveal">Reveal the hidden layer</button>
+          <button class="ui" id="lsbReset" data-i18n="lsb.resetBtn">Show normal view</button>
+        </div>
+        <div class="hint" id="lsbHint" data-i18n="lsb.hint0">Both halves look identical to your eye. Click “Reveal” to amplify the lowest bit 200× and see the data that's hiding in plain sight.</div>
+      </div>
+    </div>
+    <div class="analogy" data-i18n="idea.analogy"><b>Why it's invisible:</b> changing the last bit of a colour shifts it by at most 1 step out of 256 — a difference of about <strong>0.4%</strong>. Measured across the whole image that's a quality score (PSNR) of <strong>51.2 dB</strong>, far beyond what the eye can detect.</div>
+    <details class="deep"><summary><span class="lbl" data-closed="Go deeper — the real mechanism" data-open="Hide the details"></span></summary><div class="body">
+      <p data-i18n="idea.deep">This is classic <b>LSB (least-significant-bit) steganography</b>. PBC writes into the <code>k</code> lowest bits of each RGB channel, default <code>k=1</code> → 3 hidden bits per pixel. Each block is 32 bytes and occupies ~86 pixels. A 128×128 tile holds ~190 blocks — far more than a full editing session needs. Higher <code>k</code> (2 or 3) stores more history but lowers PSNR (43.8 dB, 37.3 dB).</p>
+    </div></details>
+  </div>
+</section>
+
+<!-- ============ TILES & CHAINS ============ -->
+<section id="tiles" data-nav="nav.tiles">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="tiles.eyebrow">The structure</p>
+    <h2 data-i18n="tiles.h2">A grid of independent chains</h2>
+    <p data-i18n="tiles.p1">PBC doesn't make one giant seal for the whole image. It chops the picture into a <strong>grid of tiles</strong> (128×128 pixels each), and gives <em>every tile its own private chain of seals</em>. No tile's chain refers to any other tile.</p>
+    <p data-i18n="tiles.p2">This one design choice is the heart of the paper, and it's what makes the next two demos work: damage stays <strong>local</strong>.</p>
+    <div class="legend">
+      <span><i class="sw g"></i> <span data-i18n="legend.green">GREEN — intact</span></span>
+      <span><i class="sw y"></i> <span data-i18n="legend.yellow">YELLOW — legitimately edited</span></span>
+      <span><i class="sw r"></i> <span data-i18n="legend.red">RED — tampered</span></span>
+      <span><i class="sw gr"></i> <span data-i18n="legend.gray">GRAY — no seal found</span></span>
+    </div>
+    <details class="deep"><summary><span class="lbl" data-closed="Go deeper — the real mechanism" data-open="Hide the details"></span></summary><div class="body">
+      <p data-i18n="tiles.deep">Each block stores a <code>chain hash</code> = SHA-256 of the previous block's bytes (truncated to 48 bits). The first block of a tile seeds from <code>SHA256(originator ‖ tile_x ‖ tile_y ‖ session-timestamp)</code>. Because the hash is computed <i>only</i> over bytes within the same tile, the verification of tile A is mathematically independent of tile B — proved formally in the paper as the <b>Cascade-Isolation Lemma</b>.</p>
+    </div></details>
+  </div>
+</section>
+
+<!-- ============ TAMPER DEMO ============ -->
+<section id="tamper" data-nav="nav.tamper">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="tamper.eyebrow">Catching tampering</p>
+    <h2 data-i18n="tamper.h2">Click anywhere to “edit” the photo</h2>
+    <p data-i18n="tamper.p1">Here's a PBC-protected image, split into tiles. Pretend you're a forger: click any tile to overwrite its pixels. The verifier instantly flags exactly the tiles you touched <span class="hl-red">RED</span> and leaves everything else <span class="hl-green">GREEN</span>. No guessing, no smearing — tampering is pinned to the exact region.</p>
+    <div class="demo">
+      <div class="head"><span class="tag">Demo 2</span><h4 data-i18n="demo2.head">Click-to-tamper · tile-level localization</h4></div>
+      <div class="stage">
+        <canvas id="tamperCanvas" width="600" height="400"></canvas>
+        <div class="readout">
+          <span class="g"><span data-i18n="tamper.r1">Tampered tiles found</span><b id="tCount">0</b></span>
+          <span class="r"><span data-i18n="tamper.r2">False alarms</span><b id="tFp">0</b></span>
+          <span class="g"><span data-i18n="tamper.r3">Detection rate</span><b id="tRate">100%</b></span>
+        </div>
+        <div class="controls">
+          <button class="ui" id="tReset" data-i18n="tamper.resetBtn">Reset image</button>
+        </div>
+        <div class="hint" data-i18n="tamper.hint">In the paper's benchmark this exact behaviour held across <strong>99 images</strong>: 100% of tampered tiles caught, 0% false positives.</div>
+      </div>
+    </div>
+    <figure class="figrow two">
+      <img src="figures/fig_tampered_overlay.png" alt="Real PBC verification overlay">
+      <img src="figures/fig_tampered_tilemap.png" alt="Machine-readable tile map">
+      <figcaption style="grid-column:1/-1" data-i18n="tamper.figcap">Actual output from the reference code: the verification overlay (left) and the compact machine-readable tile map (right) used for scoring.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ CASCADE ISOLATION ============ -->
+<section id="isolation" data-nav="nav.isolation">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="iso.eyebrow">The key novelty</p>
+    <h2 data-i18n="iso.h2">Why one break doesn't spread</h2>
+    <p data-i18n="iso.p1">Earlier "blockchain watermark" schemes linked <em>every</em> block into a <strong>single chain</strong>. That sounds neat, but it has a fatal flaw: break one block and everything after it fails too. You learn that <em>something</em> changed, but not <em>where</em> — the damage <strong>cascades</strong>.</p>
+    <p data-i18n="iso.p2">PBC's grid-of-chains stops the cascade at the tile boundary. Try both below: break a block on the left (old way) and watch the failure run to the end; break one on the right (PBC) and watch it stay put.</p>
+    <div class="demo">
+      <div class="head"><span class="tag">Demo 3</span><h4 data-i18n="demo3.head">Single chain (old) vs. grid of chains (PBC)</h4></div>
+      <div class="stage">
+        <canvas id="cascadeCanvas" width="640" height="300"></canvas>
+        <div class="controls">
+          <button class="ui" id="cReset" data-i18n="iso.resetBtn">Reset both</button>
+          <button class="ui accent" id="cRandom" data-i18n="iso.randomBtn">Break a random block</button>
+        </div>
+        <div class="hint" data-i18n="iso.hint">Click any block to "tamper" it. <span class="hl-red">Red</span> = now fails verification. Left cascades; right contains the damage to a single tile.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EDIT LEDGER ============ -->
+<section id="ledger" data-nav="nav.ledger">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="ledger.eyebrow">Beyond detection</p>
+    <h2 data-i18n="ledger.h2">An honest history of edits</h2>
+    <p data-i18n="ledger.p1">Because each tile holds a <em>chain</em>, compliant editing software can <strong>append</strong> a new entry whenever it changes a region — who edited it, what they did, when — without disturbing the parts they didn't touch. The result is a per-region <strong>Edit Ledger</strong>: a tamper-evident logbook of the image's life.</p>
+    <div class="analogy" data-i18n="ledger.analogy"><b>Analogy:</b> like the stamps in a passport. Each border crossing adds a stamp; nobody rewrites the earlier ones. You can read the whole journey, and a forged stamp stands out.</div>
+    <p data-i18n="ledger.p2">And because only the edited tiles get rewritten, appending an edit is <strong>faster</strong> than re-sealing the whole image — measured at up to <strong>74% faster</strong> in the paper.</p>
+    <details class="deep"><summary><span class="lbl" data-closed="Go deeper — the real mechanism" data-open="Hide the details"></span></summary><div class="body">
+      <p data-i18n="ledger.deep">If only a subset <code>S</code> of tiles change, append-mode reads each chain in <code>S</code>, adds one block carrying the edit's opcode + originator + timestamp, and rewrites only those tiles. Two editors working different regions (e.g. a colourist and a retoucher) each own their tiles; overlapping tiles carry <i>all</i> contributing authors in order. The reference code demonstrates 3-author attribution with every tile still verifying GREEN.</p>
+    </div></details>
+  </div>
+</section>
+
+<!-- ============ FOREST / CROP ============ -->
+<section id="forest" data-nav="nav.forest">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="forest.eyebrow">Surviving redistribution</p>
+    <h2 data-i18n="forest.h2">Still readable after a brutal crop</h2>
+    <p data-i18n="forest.p1">The neat tile grid has one weakness: crop the image off-grid and every tile shifts, scrambling all the seals at once — <strong>0% survive</strong>. So PBC adds a second mode, <strong>PBC-Forest</strong>: instead of a tidy grid, it scatters hundreds of independent seeds at random positions, like planting trees across a field.</p>
+    <p data-i18n="forest.p2">Crop the field however you like — some trees are always still standing. Drag the crop box below and watch how many seals survive.</p>
+    <div class="demo">
+      <div class="head"><span class="tag">Demo 4</span><h4 data-i18n="demo4.head">Crop simulator · scattered “forest” of seals</h4></div>
+      <div class="stage">
+        <canvas id="cropCanvas" width="600" height="380"></canvas>
+        <div class="readout">
+          <span class="g"><span data-i18n="forest.r1">Seals surviving</span><b id="fSurv">—</b></span>
+          <span class="y"><span data-i18n="forest.r2">Grid mode would give</span><b>0%</b></span>
+        </div>
+        <div class="controls">
+          <button class="ui" id="fReset" data-i18n="forest.resetBtn">Reset crop</button>
+        </div>
+        <div class="hint" data-i18n="forest.hint">Drag the highlighted box to move the crop. The paper measures <strong>41–44%</strong> survival after removing 60–80% of the image — where the regular grid recovers nothing.</div>
+      </div>
+    </div>
+    <figure class="figrow">
+      <div><img src="figures/fig_forest_before_crop.png" alt="Before crop"><figcaption data-i18n="forest.capA">(a) Seals scattered</figcaption></div>
+      <div><img src="figures/fig_forest_after_crop.png" alt="After crop"><figcaption data-i18n="forest.capB">(b) After a harsh crop</figcaption></div>
+      <div><img src="figures/fig_forest_survivors.png" alt="Survivors"><figcaption data-i18n="forest.capC">(c) Survivors recovered</figcaption></div>
+    </figure>
+    <figcaption class="muted" style="font-size:13.5px" data-i18n="forest.realcap">Real run from the public code: 442 of 1000 seals (44.2%) recovered from a non-aligned crop.</figcaption>
+  </div>
+</section>
+
+<!-- ============ SCOPE ============ -->
+<section id="scope" data-nav="nav.scope">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="scope.eyebrow">Being honest about limits</p>
+    <h2 data-i18n="scope.h2">Where it works — and where it doesn't</h2>
+    <p data-i18n="scope.p1">PBC is deliberately <strong>fragile</strong>. That's a feature for catching edits, but it means it lives in lossless pipelines. The hidden bits survive lossless formats perfectly and are destroyed by lossy compression like JPEG — at which point PBC simply reports <span class="hl-gray">GRAY</span> ("no seal here") rather than giving a wrong answer.</p>
+    <div class="scope">
+      <div class="works"><h4 class="hl-green" data-i18n="scope.worksH">✓ Reliable on</h4><ul>
+        <li data-i18n="scope.works1">PNG, BMP, TIFF, lossless WebP</li>
+        <li data-i18n="scope.works2">Archival masters &amp; editing hand-offs</li>
+        <li data-i18n="scope.works3">Wire-service / newsroom exchange</li>
+        <li data-i18n="scope.works4">Cropping &amp; resizing (Forest mode)</li>
+      </ul></div>
+      <div class="nope"><h4 class="hl-red" data-i18n="scope.nopeH">✗ Not designed for</h4><ul>
+        <li data-i18n="scope.nope1">JPEG / lossy WebP (any quality)</li>
+        <li data-i18n="scope.nope2">Social-media re-encoding</li>
+        <li data-i18n="scope.nope3">Proving <em>who</em> made it (that's C2PA's job)</li>
+        <li data-i18n="scope.nope4">Swapping two look-alike tiles</li>
+      </ul></div>
+    </div>
+    <p class="note" data-i18n="scope.note">The authors state this plainly in the paper rather than overclaiming — a sign of careful work, not a weakness.</p>
+  </div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section id="compare" data-nav="nav.compare">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="compare.eyebrow">How it fits</p>
+    <h2 data-i18n="compare.h2">PBC, C2PA, and AI watermarks</h2>
+    <p data-i18n="compare.p1">These aren't rivals — they cover different gaps. PBC is the lightweight pixel-level safety net that needs no servers, no AI, and no special hardware.</p>
+    <table class="ctab">
+      <tr><th>&nbsp;</th><th>PBC</th><th>C2PA</th><th data-i18n="compare.colAI">Neural (AI)</th></tr>
+      <tr><td data-i18n="compare.row1">Survives metadata stripping</td><td class="yes" data-i18n="compare.yes">Yes</td><td class="no" data-i18n="compare.no2">No*</td><td class="yes" data-i18n="compare.yes">Yes</td></tr>
+      <tr><td data-i18n="compare.row2">Pinpoints <em>where</em> edited</td><td class="yes" data-i18n="compare.tile">Tile-level</td><td class="no" data-i18n="compare.no">No</td><td class="yes" data-i18n="compare.pixel">Pixel-level</td></tr>
+      <tr><td data-i18n="compare.row3">Proves <em>who</em> made it</td><td class="no" data-i18n="compare.no">No</td><td class="yes" data-i18n="compare.yes">Yes</td><td class="partial" data-i18n="compare.some">Some</td></tr>
+      <tr><td data-i18n="compare.row4">Survives JPEG</td><td class="no" data-i18n="compare.no">No</td><td class="partial" data-i18n="compare.soft">Via soft-binding</td><td class="yes" data-i18n="compare.yes">Yes</td></tr>
+      <tr><td data-i18n="compare.row5">Needs GPU / training</td><td class="yes" data-i18n="compare.no">No</td><td class="yes" data-i18n="compare.no">No</td><td class="no" data-i18n="compare.yes">Yes</td></tr>
+      <tr><td data-i18n="compare.row6">Runs in camera firmware</td><td class="yes" data-i18n="compare.yes">Yes</td><td class="partial" data-i18n="compare.partly">Partly</td><td class="no" data-i18n="compare.no">No</td></tr>
+    </table>
+    <p class="note" data-i18n="compare.note">*C2PA v2.4 adds durable credentials &amp; fingerprints to help re-find a stripped manifest — but the local tamper signal still isn't in the pixels. That's the gap PBC fills.</p>
+  </div>
+</section>
+
+<!-- ============ EVIDENCE ============ -->
+<section id="evidence" data-nav="nav.evidence">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="evidence.eyebrow">The evidence</p>
+    <h2 data-i18n="evidence.h2">What the experiments showed</h2>
+    <p data-i18n="evidence.p1">Every number below was reproduced by re-running the public code on a 99-image benchmark (real photos from COCO, Oxford Flowers &amp; Pets, plus synthetic test images).</p>
+    <div class="stats">
+      <div class="stat"><div class="n">51.2<span style="font-size:15px">dB</span></div><div class="l" data-i18n="evidence.s1">Image quality (PSNR) — visually identical</div></div>
+      <div class="stat"><div class="n">100%</div><div class="l" data-i18n="evidence.s2">Tampered tiles correctly caught</div></div>
+      <div class="stat"><div class="n">0%</div><div class="l" data-i18n="evidence.s3">False alarms on clean tiles</div></div>
+      <div class="stat"><div class="n">41–44%</div><div class="l" data-i18n="evidence.s4">Seals surviving a severe crop (Forest)</div></div>
+    </div>
+    <p data-i18n="evidence.p2">And a property you can't fake with statistics — it's <em>proven mathematically</em>: a break in one tile can never affect the verdict on another. That guarantee is what lets the localization be exact instead of approximate.</p>
+  </div>
+</section>
+
+<!-- ============ LIMITS ============ -->
+<section id="limits" data-nav="nav.limits">
+  <div class="wrap reveal">
+    <p class="eyebrow" data-i18n="limits.eyebrow">Staying honest</p>
+    <h2 data-i18n="limits.h2">What it can't do (yet)</h2>
+    <p data-i18n="limits.p1">Good research names its own boundaries. The paper lists these openly:</p>
+    <ul style="color:#cfd8e2">
+      <li data-i18n="limits.l1"><strong>Lossy channels.</strong> JPEG and social media erase the hidden layer — PBC reports GRAY, by design.</li>
+      <li data-i18n="limits.l2"><strong>Identity.</strong> The "who" is self-declared, not cryptographically signed. Pair it with C2PA for that.</li>
+      <li data-i18n="limits.l3"><strong>Look-alike swaps.</strong> Because tiles are independent, two near-identical tiles (two patches of sky) could be swapped without breaking either chain. A future cross-tile commitment would close this.</li>
+      <li data-i18n="limits.l4"><strong>Subtle edits.</strong> The benchmark overwrites regions with random pixels; carefully hand-crafted edits that preserve the lowest bit aren't yet tested.</li>
+    </ul>
+    <p class="muted" data-i18n="limits.note">Each of these is a clearly-scoped direction for future work, not a hidden flaw.</p>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer id="read" data-nav="nav.read">
+  <div class="wrap">
+    <h2 style="font-size:24px" data-i18n="read.h2">Read the real thing</h2>
+    <p class="auth">Pixel Block Chain: Spatial Tamper Localization and Crop-Resilient Edit Ledger for Images in the Wild</p>
+    <p class="muted">François Légaré · Sion Israel Sion · Alain April — IEEE ICIP 2026</p>
+    <p style="margin-top:12px"><a href="https://github.com/flegare/pixel-block-chain" data-i18n="read.link">Reference code &amp; paper on GitHub →</a></p>
+    <hr class="soft">
+    <p class="note" data-i18n="read.note">This page is a plain-language companion to the paper. Every figure and statistic comes from the published reference implementation.</p>
+  </div>
+</footer>
+
+<script>
+/* ===================== i18n ===================== */
+const I18N = {
+  fr:{
+    "meta.title":"Pixel Block Chain — Le fonctionnement, en clair",
+    "nav.start":"Début","nav.problem":"Le problème","nav.idea":"L'idée","nav.tiles":"Tuiles & chaînes",
+    "nav.tamper":"Détecter","nav.isolation":"Aucune cascade","nav.ledger":"Journal d'édition",
+    "nav.forest":"Survivre au recadrage","nav.scope":"Portée","nav.compare":"vs C2PA / IA",
+    "nav.evidence":"Les preuves","nav.limits":"Limites","nav.read":"Lire plus",
+    "hero.pill":"Un guide en langage clair de l'article scientifique",
+    "hero.sub":"Une façon de cacher un « sceau » infalsifiable <em>à l'intérieur même des pixels d'une image</em> — pour qu'après copie, recadrage et suppression de toutes ses métadonnées, on puisse encore savoir <strong>si elle a été modifiée, et exactement où</strong>.",
+    "hero.cta1":"Commencer la lecture →","hero.cta2":"Aller aux démos interactives","hero.scroll":"défiler",
+    "problem.eyebrow":"Le problème","problem.h2":"Les photos perdent leur traçabilité",
+    "problem.lead":"Chaque partage d'une image en efface discrètement l'histoire.",
+    "problem.p1":"Quand vous publiez une photo, l'envoyez dans une conversation ou qu'une rédaction la ré-exporte, le fichier est ré-enregistré. Ce ré-enregistrement supprime l'« étiquette » cachée — les métadonnées — qui indiquent normalement d'où vient l'image et si elle a été modifiée. Les pixels arrivent ; leur histoire, non.",
+    "problem.analogy":"<b>Analogie :</b> imaginez un tableau avec un certificat d'authenticité collé au dos. Photocopiez le tableau et le certificat disparaît — même si l'image semble parfaite. Les systèmes actuels mettent le certificat au dos. <strong>PBC l'inscrit, invisible, dans la peinture elle-même.</strong>",
+    "problem.p2":"Des systèmes comme <strong>C2PA</strong> (la norme du secteur, soutenue par Adobe, la BBC, les fabricants d'appareils photo) attachent un certificat cryptographique au fichier. C'est excellent — <em>tant que le fichier reste intact</em>. Dès que le conteneur est supprimé, ce certificat disparaît et il ne reste que des pixels bruts, invérifiables.",
+    "problem.deep":"PBC est explicitement conçu comme un <b>complément</b> à C2PA, et non un concurrent. C2PA prouve l'<i>identité</i> (qui a créé ceci, signé par une clé de confiance) au niveau du conteneur. PBC fournit une <i>intégrité locale par tuile</i> (une région a-t-elle été modifiée) au niveau du pixel — la couche qui subsiste quand le conteneur a disparu. L'article positionne PBC pour les canaux <code>sans perte / quasi sans perte</code> : masters d'archivage, transferts éditoriaux, échanges entre agences de presse.",
+    "idea.eyebrow":"L'idée maîtresse","idea.h2":"Cacher le sceau dans les pixels",
+    "idea.p1":"Chaque pixel est un nombre — par exemple sa quantité de rouge, de vert et de bleu. PBC ajuste le <strong>tout dernier chiffre</strong> de chacun de ces nombres. Ce dernier chiffre est si insignifiant que l'œil ne peut percevoir le changement, mais à l'échelle de millions de pixels il y a assez de place pour y glisser un message caché.",
+    "idea.p2":"Ce message caché est une chaîne de minuscules <strong>blocs infalsifiables</strong> — comme une rangée de sceaux de cire, où chaque sceau est apposé à partir du précédent. Brisez un sceau et la chaîne ne concorde plus.",
+    "demo1.head":"Le changement vous est invisible — mais il est bien là",
+    "lsb.reveal":"Révéler la couche cachée","lsb.resetBtn":"Vue normale",
+    "lsb.hint0":"Les deux moitiés semblent identiques à l'œil. Cliquez sur « Révéler » pour amplifier le bit le plus faible 200× et voir les données cachées en pleine vue.",
+    "idea.analogy":"<b>Pourquoi c'est invisible :</b> modifier le dernier bit d'une couleur la décale d'au plus 1 cran sur 256 — un écart d'environ <strong>0,4 %</strong>. Mesuré sur toute l'image, cela donne une qualité (PSNR) de <strong>51,2 dB</strong>, bien au-delà du seuil de perception de l'œil.",
+    "idea.deep":"C'est de la <b>stéganographie LSB</b> (bit de poids faible) classique. PBC écrit dans les <code>k</code> bits les plus faibles de chaque canal RVB, par défaut <code>k=1</code> → 3 bits cachés par pixel. Chaque bloc fait 32 octets et occupe ~86 pixels. Une tuile 128×128 contient ~190 blocs — bien plus qu'une session d'édition complète n'en exige. Un <code>k</code> plus élevé (2 ou 3) stocke plus d'historique mais réduit le PSNR (43,8 dB, 37,3 dB).",
+    "tiles.eyebrow":"La structure","tiles.h2":"Une grille de chaînes indépendantes",
+    "tiles.p1":"PBC ne crée pas un seul sceau géant pour toute l'image. Il découpe l'image en une <strong>grille de tuiles</strong> (128×128 pixels chacune) et donne à <em>chaque tuile sa propre chaîne de sceaux</em>. Aucune chaîne de tuile ne fait référence à une autre.",
+    "tiles.p2":"Ce seul choix de conception est le cœur de l'article, et c'est ce qui fait fonctionner les deux démos suivantes : les dommages restent <strong>locaux</strong>.",
+    "legend.green":"VERT — intacte","legend.yellow":"JAUNE — éditée légitimement","legend.red":"ROUGE — altérée","legend.gray":"GRIS — aucun sceau trouvé",
+    "tiles.deep":"Chaque bloc stocke un <code>hash de chaîne</code> = SHA-256 des octets du bloc précédent (tronqué à 48 bits). Le premier bloc d'une tuile est initialisé par <code>SHA256(émetteur ‖ tuile_x ‖ tuile_y ‖ horodatage-de-session)</code>. Comme le hash est calculé <i>uniquement</i> sur les octets de la même tuile, la vérification de la tuile A est mathématiquement indépendante de la tuile B — démontré formellement dans l'article comme le <b>lemme d'isolation des cascades</b>.",
+    "tamper.eyebrow":"Détecter l'altération","tamper.h2":"Cliquez n'importe où pour « modifier » la photo",
+    "tamper.p1":"Voici une image protégée par PBC, découpée en tuiles. Faites le faussaire : cliquez sur une tuile pour en écraser les pixels. Le vérificateur marque instantanément en <span class=\"hl-red\">ROUGE</span> exactement les tuiles touchées et laisse le reste en <span class=\"hl-green\">VERT</span>. Sans approximation : l'altération est localisée à la région exacte.",
+    "demo2.head":"Cliquer-pour-altérer · localisation à la tuile",
+    "tamper.r1":"Tuiles altérées détectées","tamper.r2":"Fausses alertes","tamper.r3":"Taux de détection",
+    "tamper.resetBtn":"Réinitialiser l'image",
+    "tamper.hint":"Dans le banc d'essai de l'article, ce comportement exact s'est vérifié sur <strong>99 images</strong> : 100 % des tuiles altérées détectées, 0 % de faux positifs.",
+    "tamper.figcap":"Sortie réelle du code de référence : la superposition de vérification (à gauche) et la carte de tuiles compacte et lisible par machine (à droite) utilisée pour la notation.",
+    "iso.eyebrow":"La nouveauté clé","iso.h2":"Pourquoi une rupture ne se propage pas",
+    "iso.p1":"Les anciens « filigranes blockchain » reliaient <em>tous</em> les blocs en une <strong>chaîne unique</strong>. Ça paraît élégant, mais le défaut est fatal : brisez un bloc et tout ce qui suit échoue aussi. On apprend que <em>quelque chose</em> a changé, mais pas <em>où</em> — le dommage <strong>se propage en cascade</strong>.",
+    "iso.p2":"La grille de chaînes de PBC arrête la cascade à la frontière de la tuile. Essayez les deux ci-dessous : brisez un bloc à gauche (ancienne méthode) et regardez l'échec courir jusqu'au bout ; brisez-en un à droite (PBC) et regardez-le rester en place.",
+    "demo3.head":"Chaîne unique (ancien) vs. grille de chaînes (PBC)",
+    "iso.resetBtn":"Tout réinitialiser","iso.randomBtn":"Briser un bloc au hasard",
+    "iso.hint":"Cliquez sur un bloc pour l'« altérer ». <span class=\"hl-red\">Rouge</span> = échoue la vérification. À gauche, ça cascade ; à droite, le dommage reste confiné à une seule tuile.",
+    "ledger.eyebrow":"Au-delà de la détection","ledger.h2":"Un historique honnête des modifications",
+    "ledger.p1":"Comme chaque tuile contient une <em>chaîne</em>, un logiciel d'édition conforme peut <strong>ajouter</strong> une entrée chaque fois qu'il modifie une région — qui a édité, quoi, quand — sans toucher aux parties laissées intactes. On obtient un <strong>journal d'édition</strong> par région : un carnet de bord infalsifiable de la vie de l'image.",
+    "ledger.analogy":"<b>Analogie :</b> comme les tampons d'un passeport. Chaque passage de frontière ajoute un tampon ; personne ne réécrit les précédents. On peut lire tout le parcours, et un faux tampon se remarque.",
+    "ledger.p2":"Et comme seules les tuiles modifiées sont réécrites, ajouter une modification est <strong>plus rapide</strong> que re-sceller toute l'image — mesuré jusqu'à <strong>74 % plus rapide</strong> dans l'article.",
+    "ledger.deep":"Si seul un sous-ensemble <code>S</code> de tuiles change, le mode ajout lit chaque chaîne de <code>S</code>, ajoute un bloc portant l'opcode + l'émetteur + l'horodatage de la modification, et ne réécrit que ces tuiles. Deux éditeurs travaillant des régions différentes (p. ex. un coloriste et un retoucheur) possèdent chacun leurs tuiles ; les tuiles qui se chevauchent portent <i>tous</i> les auteurs, dans l'ordre. Le code de référence démontre l'attribution à 3 auteurs avec chaque tuile encore vérifiée VERTE.",
+    "forest.eyebrow":"Survivre à la rediffusion","forest.h2":"Encore lisible après un recadrage brutal",
+    "forest.p1":"La belle grille de tuiles a une faiblesse : recadrez hors grille et chaque tuile se décale, brouillant tous les sceaux d'un coup — <strong>0 % survit</strong>. PBC ajoute donc un second mode, <strong>PBC-Forest</strong> : au lieu d'une grille régulière, il disperse des centaines de germes indépendants à des positions aléatoires, comme on planterait des arbres dans un champ.",
+    "forest.p2":"Recadrez le champ comme vous voulez — il reste toujours quelques arbres debout. Faites glisser la zone de recadrage ci-dessous et observez combien de sceaux survivent.",
+    "demo4.head":"Simulateur de recadrage · « forêt » de sceaux dispersés",
+    "forest.r1":"Sceaux survivants","forest.r2":"Le mode grille donnerait","forest.resetBtn":"Réinitialiser le recadrage",
+    "forest.hint":"Faites glisser la zone surlignée pour déplacer le recadrage. L'article mesure <strong>41–44 %</strong> de survie après suppression de 60–80 % de l'image — là où la grille régulière ne récupère rien.",
+    "forest.capA":"(a) Sceaux dispersés","forest.capB":"(b) Après un recadrage sévère","forest.capC":"(c) Survivants récupérés",
+    "forest.realcap":"Exécution réelle du code public : 442 sceaux sur 1000 (44,2 %) récupérés après un recadrage non aligné.",
+    "scope.eyebrow":"Être honnête sur les limites","scope.h2":"Où ça marche — et où ça ne marche pas",
+    "scope.p1":"PBC est délibérément <strong>fragile</strong>. C'est un atout pour détecter les modifications, mais cela le confine aux pipelines sans perte. Les bits cachés survivent parfaitement aux formats sans perte et sont détruits par la compression avec perte comme le JPEG — auquel cas PBC signale simplement <span class=\"hl-gray\">GRIS</span> (« aucun sceau ici ») au lieu de donner une réponse erronée.",
+    "scope.worksH":"✓ Fiable sur","scope.works1":"PNG, BMP, TIFF, WebP sans perte","scope.works2":"Masters d'archivage et transferts d'édition",
+    "scope.works3":"Échanges entre agences / salles de rédaction","scope.works4":"Recadrage et redimensionnement (mode Forest)",
+    "scope.nopeH":"✗ Pas conçu pour","scope.nope1":"JPEG / WebP avec perte (toute qualité)","scope.nope2":"Ré-encodage des réseaux sociaux",
+    "scope.nope3":"Prouver <em>qui</em> l'a créée (c'est le rôle de C2PA)","scope.nope4":"Échanger deux tuiles quasi identiques",
+    "scope.note":"Les auteurs l'énoncent clairement dans l'article plutôt que de surpromettre — un signe de travail rigoureux, pas une faiblesse.",
+    "compare.eyebrow":"Comment ça s'imbrique","compare.h2":"PBC, C2PA et les filigranes IA",
+    "compare.p1":"Ce ne sont pas des rivaux — ils couvrent des manques différents. PBC est le filet de sécurité léger, au niveau du pixel, sans serveur, sans IA et sans matériel spécial.",
+    "compare.colAI":"Neuronal (IA)",
+    "compare.row1":"Survit à la suppression des métadonnées","compare.row2":"Localise <em>où</em> l'édition a eu lieu",
+    "compare.row3":"Prouve <em>qui</em> l'a créée","compare.row4":"Survit au JPEG","compare.row5":"Nécessite GPU / entraînement","compare.row6":"Fonctionne dans le micrologiciel d'appareil photo",
+    "compare.yes":"Oui","compare.no":"Non","compare.no2":"Non*","compare.tile":"Par tuile","compare.pixel":"Par pixel",
+    "compare.some":"Parfois","compare.soft":"Via soft-binding","compare.partly":"En partie",
+    "compare.note":"*C2PA v2.4 ajoute des identifiants durables et des empreintes pour aider à retrouver un manifeste supprimé — mais le signal d'altération local n'est toujours pas dans les pixels. C'est le manque que PBC comble.",
+    "evidence.eyebrow":"Les preuves","evidence.h2":"Ce que les expériences ont montré",
+    "evidence.p1":"Chaque chiffre ci-dessous a été reproduit en ré-exécutant le code public sur un banc d'essai de 99 images (photos réelles de COCO, Oxford Flowers et Pets, plus des images de test synthétiques).",
+    "evidence.s1":"Qualité d'image (PSNR) — visuellement identique","evidence.s2":"Tuiles altérées correctement détectées",
+    "evidence.s3":"Fausses alertes sur tuiles intactes","evidence.s4":"Sceaux survivant à un recadrage sévère (Forest)",
+    "evidence.p2":"Et une propriété qu'aucune statistique ne peut truquer — elle est <em>prouvée mathématiquement</em> : une rupture dans une tuile ne peut jamais affecter le verdict d'une autre. C'est cette garantie qui rend la localisation exacte plutôt qu'approximative.",
+    "limits.eyebrow":"Rester honnête","limits.h2":"Ce qu'il ne peut pas (encore) faire",
+    "limits.p1":"Une bonne recherche nomme ses propres limites. L'article les énumère ouvertement :",
+    "limits.l1":"<strong>Canaux avec perte.</strong> Le JPEG et les réseaux sociaux effacent la couche cachée — PBC signale GRIS, par conception.",
+    "limits.l2":"<strong>Identité.</strong> Le « qui » est auto-déclaré, non signé cryptographiquement. Associez-le à C2PA pour cela.",
+    "limits.l3":"<strong>Échanges de sosies.</strong> Comme les tuiles sont indépendantes, deux tuiles quasi identiques (deux morceaux de ciel) pourraient être échangées sans briser aucune chaîne. Un futur engagement inter-tuiles corrigerait cela.",
+    "limits.l4":"<strong>Modifications subtiles.</strong> Le banc d'essai écrase les régions avec des pixels aléatoires ; les modifications soignées qui préservent le bit de poids faible ne sont pas encore testées.",
+    "limits.note":"Chacune de ces limites est une piste de travaux futurs clairement définie, pas un défaut caché.",
+    "read.h2":"Lire l'article original","read.link":"Code de référence et article sur GitHub →",
+    "read.note":"Cette page est un compagnon en langage clair de l'article. Chaque figure et statistique provient de l'implémentation de référence publiée."
+  },
+  es:{
+    "meta.title":"Pixel Block Chain — Cómo funciona, en lenguaje sencillo",
+    "nav.start":"Inicio","nav.problem":"El problema","nav.idea":"La idea","nav.tiles":"Mosaicos y cadenas",
+    "nav.tamper":"Detectar","nav.isolation":"Sin cascada","nav.ledger":"Registro de ediciones",
+    "nav.forest":"Sobrevivir al recorte","nav.scope":"Alcance","nav.compare":"vs C2PA / IA",
+    "nav.evidence":"La evidencia","nav.limits":"Límites","nav.read":"Leer más",
+    "hero.pill":"Una guía en lenguaje claro del artículo científico",
+    "hero.sub":"Una forma de ocultar un «sello» a prueba de manipulaciones <em>dentro de los propios píxeles de una imagen</em> — para que, incluso tras copiarla, recortarla y quitarle todos sus metadatos, aún se pueda saber <strong>si fue alterada, y exactamente dónde</strong>.",
+    "hero.cta1":"Empezar a leer →","hero.cta2":"Ir a las demos interactivas","hero.scroll":"desplázate",
+    "problem.eyebrow":"El problema","problem.h2":"Las fotos pierden su rastro",
+    "problem.lead":"Cada vez que se comparte una imagen, algo borra silenciosamente su historia.",
+    "problem.p1":"Cuando publicas una foto, la envías en un chat o una redacción la reexporta, el archivo se vuelve a guardar. Ese reguardado descarta la «etiqueta» oculta — los metadatos — que normalmente registran de dónde viene la imagen y si fue editada. Llegan los píxeles; la historia detrás de ellos, no.",
+    "problem.analogy":"<b>Analogía:</b> imagina un cuadro con un certificado de autenticidad pegado al dorso. Fotocopia el cuadro y el certificado desaparece — aunque la imagen se vea perfecta. Los sistemas actuales ponen el certificado al dorso. <strong>PBC lo escribe, invisible, en la propia pintura.</strong>",
+    "problem.p2":"Sistemas como <strong>C2PA</strong> (el estándar del sector, respaldado por Adobe, la BBC y fabricantes de cámaras) adjuntan un certificado criptográfico al archivo. Es excelente — <em>mientras el archivo sobreviva intacto</em>. En cuanto se elimina el contenedor, ese certificado desaparece y solo quedan píxeles en bruto, imposibles de verificar.",
+    "problem.deep":"PBC está diseñado explícitamente como un <b>complemento</b> de C2PA, no un competidor. C2PA prueba la <i>identidad</i> (quién creó esto, firmado con una clave de confianza) a nivel del contenedor. PBC aporta <i>integridad local por mosaico</i> (¿se alteró alguna región?) a nivel del píxel — la capa que sigue ahí cuando el contenedor desaparece. El artículo posiciona PBC para canales <code>sin pérdida / casi sin pérdida</code>: másteres de archivo, entregas editoriales, intercambios entre agencias.",
+    "idea.eyebrow":"La gran idea","idea.h2":"Ocultar el sello en los píxeles",
+    "idea.p1":"Cada píxel es un número — por ejemplo, cuánto rojo, verde y azul tiene. PBC ajusta el <strong>último dígito</strong> de cada uno de esos números. Ese último dígito es tan insignificante que el ojo no puede ver el cambio, pero a lo largo de millones de píxeles hay sitio de sobra para esconder un mensaje.",
+    "idea.p2":"Ese mensaje oculto es una cadena de diminutos <strong>bloques infalsificables</strong> — como una fila de sellos de cera, donde cada sello se estampa usando el anterior. Rompe un sello y la cadena deja de cuadrar.",
+    "demo1.head":"El cambio te resulta invisible — pero ahí está",
+    "lsb.reveal":"Revelar la capa oculta","lsb.resetBtn":"Vista normal",
+    "lsb.hint0":"Ambas mitades parecen idénticas a tu ojo. Pulsa «Revelar» para amplificar el bit más bajo 200× y ver los datos que se esconden a plena vista.",
+    "idea.analogy":"<b>Por qué es invisible:</b> cambiar el último bit de un color lo desplaza como mucho 1 paso de 256 — una diferencia de cerca del <strong>0,4 %</strong>. Medido en toda la imagen, eso da una calidad (PSNR) de <strong>51,2 dB</strong>, muy por encima de lo que el ojo detecta.",
+    "idea.deep":"Esto es <b>esteganografía LSB</b> (bit menos significativo) clásica. PBC escribe en los <code>k</code> bits más bajos de cada canal RGB, por defecto <code>k=1</code> → 3 bits ocultos por píxel. Cada bloque ocupa 32 bytes y ~86 píxeles. Un mosaico de 128×128 contiene ~190 bloques — mucho más de lo que necesita una sesión de edición completa. Un <code>k</code> mayor (2 o 3) guarda más historial pero baja el PSNR (43,8 dB, 37,3 dB).",
+    "tiles.eyebrow":"La estructura","tiles.h2":"Una cuadrícula de cadenas independientes",
+    "tiles.p1":"PBC no crea un único sello gigante para toda la imagen. Divide la imagen en una <strong>cuadrícula de mosaicos</strong> (128×128 píxeles cada uno) y da a <em>cada mosaico su propia cadena de sellos</em>. Ninguna cadena de un mosaico hace referencia a otro.",
+    "tiles.p2":"Esta única decisión de diseño es el corazón del artículo, y es lo que hace funcionar las dos demos siguientes: el daño permanece <strong>local</strong>.",
+    "legend.green":"VERDE — intacto","legend.yellow":"AMARILLO — editado legítimamente","legend.red":"ROJO — manipulado","legend.gray":"GRIS — sin sello",
+    "tiles.deep":"Cada bloque guarda un <code>hash de cadena</code> = SHA-256 de los bytes del bloque anterior (truncado a 48 bits). El primer bloque de un mosaico se inicializa con <code>SHA256(emisor ‖ mosaico_x ‖ mosaico_y ‖ marca-de-tiempo)</code>. Como el hash se calcula <i>solo</i> sobre los bytes del mismo mosaico, la verificación del mosaico A es matemáticamente independiente del B — demostrado formalmente en el artículo como el <b>lema de aislamiento de cascadas</b>.",
+    "tamper.eyebrow":"Detectar manipulaciones","tamper.h2":"Haz clic donde sea para «editar» la foto",
+    "tamper.p1":"Aquí tienes una imagen protegida con PBC, dividida en mosaicos. Haz de falsificador: haz clic en cualquier mosaico para sobrescribir sus píxeles. El verificador marca al instante en <span class=\"hl-red\">ROJO</span> exactamente los mosaicos que tocaste y deja el resto en <span class=\"hl-green\">VERDE</span>. Sin conjeturas: la manipulación queda fijada a la región exacta.",
+    "demo2.head":"Clic-para-manipular · localización por mosaico",
+    "tamper.r1":"Mosaicos manipulados detectados","tamper.r2":"Falsas alarmas","tamper.r3":"Tasa de detección",
+    "tamper.resetBtn":"Restablecer imagen",
+    "tamper.hint":"En el banco de pruebas del artículo este mismo comportamiento se mantuvo en <strong>99 imágenes</strong>: 100 % de mosaicos manipulados detectados, 0 % de falsos positivos.",
+    "tamper.figcap":"Salida real del código de referencia: la superposición de verificación (izquierda) y el mapa de mosaicos compacto y legible por máquina (derecha) usado para la puntuación.",
+    "iso.eyebrow":"La novedad clave","iso.h2":"Por qué una rotura no se propaga",
+    "iso.p1":"Los antiguos «marcas de agua blockchain» enlazaban <em>todos</em> los bloques en una <strong>única cadena</strong>. Suena elegante, pero tiene un fallo fatal: rompe un bloque y todo lo que sigue también falla. Te enteras de que <em>algo</em> cambió, pero no <em>dónde</em> — el daño se propaga en <strong>cascada</strong>.",
+    "iso.p2":"La cuadrícula de cadenas de PBC detiene la cascada en el borde del mosaico. Prueba ambas abajo: rompe un bloque a la izquierda (método antiguo) y mira cómo el fallo llega hasta el final; rompe uno a la derecha (PBC) y míralo quedarse quieto.",
+    "demo3.head":"Cadena única (antiguo) vs. cuadrícula de cadenas (PBC)",
+    "iso.resetBtn":"Restablecer ambas","iso.randomBtn":"Romper un bloque al azar",
+    "iso.hint":"Haz clic en un bloque para «manipularlo». <span class=\"hl-red\">Rojo</span> = ahora falla la verificación. A la izquierda se propaga; a la derecha el daño queda confinado a un solo mosaico.",
+    "ledger.eyebrow":"Más allá de la detección","ledger.h2":"Un historial honesto de ediciones",
+    "ledger.p1":"Como cada mosaico contiene una <em>cadena</em>, un software de edición conforme puede <strong>añadir</strong> una entrada cada vez que modifica una región — quién editó, qué hizo, cuándo — sin tocar las partes que no cambió. El resultado es un <strong>registro de ediciones</strong> por región: una bitácora infalsificable de la vida de la imagen.",
+    "ledger.analogy":"<b>Analogía:</b> como los sellos de un pasaporte. Cada cruce de frontera añade un sello; nadie reescribe los anteriores. Se puede leer todo el recorrido, y un sello falso se nota.",
+    "ledger.p2":"Y como solo se reescriben los mosaicos editados, añadir una edición es <strong>más rápido</strong> que volver a sellar toda la imagen — medido hasta un <strong>74 % más rápido</strong> en el artículo.",
+    "ledger.deep":"Si solo cambia un subconjunto <code>S</code> de mosaicos, el modo añadir lee cada cadena de <code>S</code>, agrega un bloque con el opcode + emisor + marca de tiempo de la edición, y reescribe solo esos mosaicos. Dos editores trabajando regiones distintas (p. ej. un colorista y un retocador) poseen cada uno sus mosaicos; los mosaicos que se solapan llevan a <i>todos</i> los autores, en orden. El código de referencia demuestra la atribución de 3 autores con cada mosaico aún verificado VERDE.",
+    "forest.eyebrow":"Sobrevivir a la redistribución","forest.h2":"Aún legible tras un recorte brutal",
+    "forest.p1":"La pulcra cuadrícula de mosaicos tiene una debilidad: recorta fuera de la cuadrícula y cada mosaico se desplaza, revolviendo todos los sellos a la vez — <strong>0 % sobrevive</strong>. Por eso PBC añade un segundo modo, <strong>PBC-Forest</strong>: en vez de una cuadrícula ordenada, dispersa cientos de semillas independientes en posiciones aleatorias, como plantar árboles por un campo.",
+    "forest.p2":"Recorta el campo como quieras — siempre quedan algunos árboles en pie. Arrastra el recuadro de recorte de abajo y observa cuántos sellos sobreviven.",
+    "demo4.head":"Simulador de recorte · «bosque» de sellos dispersos",
+    "forest.r1":"Sellos que sobreviven","forest.r2":"El modo cuadrícula daría","forest.resetBtn":"Restablecer recorte",
+    "forest.hint":"Arrastra el recuadro resaltado para mover el recorte. El artículo mide <strong>41–44 %</strong> de supervivencia tras eliminar 60–80 % de la imagen — donde la cuadrícula regular no recupera nada.",
+    "forest.capA":"(a) Sellos dispersos","forest.capB":"(b) Tras un recorte severo","forest.capC":"(c) Supervivientes recuperados",
+    "forest.realcap":"Ejecución real del código público: 442 de 1000 sellos (44,2 %) recuperados de un recorte no alineado.",
+    "scope.eyebrow":"Ser honestos con los límites","scope.h2":"Dónde funciona — y dónde no",
+    "scope.p1":"PBC es deliberadamente <strong>frágil</strong>. Eso es una virtud para detectar ediciones, pero lo confina a flujos sin pérdida. Los bits ocultos sobreviven perfectamente a los formatos sin pérdida y los destruye la compresión con pérdida como el JPEG — momento en el que PBC simplemente informa <span class=\"hl-gray\">GRIS</span> («aquí no hay sello») en lugar de dar una respuesta errónea.",
+    "scope.worksH":"✓ Fiable en","scope.works1":"PNG, BMP, TIFF, WebP sin pérdida","scope.works2":"Másteres de archivo y entregas de edición",
+    "scope.works3":"Intercambio entre agencias / redacciones","scope.works4":"Recorte y redimensionado (modo Forest)",
+    "scope.nopeH":"✗ No diseñado para","scope.nope1":"JPEG / WebP con pérdida (cualquier calidad)","scope.nope2":"Recodificación de redes sociales",
+    "scope.nope3":"Probar <em>quién</em> la creó (eso es tarea de C2PA)","scope.nope4":"Intercambiar dos mosaicos casi idénticos",
+    "scope.note":"Los autores lo declaran con claridad en el artículo en vez de prometer de más — señal de trabajo riguroso, no de debilidad.",
+    "compare.eyebrow":"Cómo encaja","compare.h2":"PBC, C2PA y las marcas de agua de IA",
+    "compare.p1":"No son rivales — cubren huecos distintos. PBC es la red de seguridad ligera, a nivel de píxel, sin servidores, sin IA y sin hardware especial.",
+    "compare.colAI":"Neuronal (IA)",
+    "compare.row1":"Sobrevive a la eliminación de metadatos","compare.row2":"Señala <em>dónde</em> se editó",
+    "compare.row3":"Prueba <em>quién</em> la creó","compare.row4":"Sobrevive al JPEG","compare.row5":"Requiere GPU / entrenamiento","compare.row6":"Corre en el firmware de la cámara",
+    "compare.yes":"Sí","compare.no":"No","compare.no2":"No*","compare.tile":"Por mosaico","compare.pixel":"Por píxel",
+    "compare.some":"Algo","compare.soft":"Vía soft-binding","compare.partly":"En parte",
+    "compare.note":"*C2PA v2.4 añade credenciales duraderas y huellas para ayudar a reencontrar un manifiesto eliminado — pero la señal local de manipulación sigue sin estar en los píxeles. Ese es el hueco que llena PBC.",
+    "evidence.eyebrow":"La evidencia","evidence.h2":"Lo que mostraron los experimentos",
+    "evidence.p1":"Cada cifra de abajo se reprodujo reejecutando el código público sobre un banco de 99 imágenes (fotos reales de COCO, Oxford Flowers y Pets, más imágenes de prueba sintéticas).",
+    "evidence.s1":"Calidad de imagen (PSNR) — visualmente idéntica","evidence.s2":"Mosaicos manipulados detectados correctamente",
+    "evidence.s3":"Falsas alarmas en mosaicos intactos","evidence.s4":"Sellos que sobreviven a un recorte severo (Forest)",
+    "evidence.p2":"Y una propiedad que ninguna estadística puede falsear — está <em>demostrada matemáticamente</em>: una rotura en un mosaico nunca puede afectar el veredicto de otro. Esa garantía es lo que hace que la localización sea exacta en vez de aproximada.",
+    "limits.eyebrow":"Seguir siendo honestos","limits.h2":"Lo que (todavía) no puede hacer",
+    "limits.p1":"La buena investigación nombra sus propios límites. El artículo los enumera abiertamente:",
+    "limits.l1":"<strong>Canales con pérdida.</strong> El JPEG y las redes sociales borran la capa oculta — PBC informa GRIS, por diseño.",
+    "limits.l2":"<strong>Identidad.</strong> El «quién» es autodeclarado, no firmado criptográficamente. Combínalo con C2PA para eso.",
+    "limits.l3":"<strong>Intercambio de sosias.</strong> Como los mosaicos son independientes, dos mosaicos casi idénticos (dos trozos de cielo) podrían intercambiarse sin romper ninguna cadena. Un futuro compromiso entre mosaicos lo resolvería.",
+    "limits.l4":"<strong>Ediciones sutiles.</strong> El banco de pruebas sobrescribe regiones con píxeles aleatorios; las ediciones cuidadas que preservan el bit más bajo aún no se han probado.",
+    "limits.note":"Cada uno de estos es una línea de trabajo futuro bien definida, no un defecto oculto.",
+    "read.h2":"Lee el original","read.link":"Código de referencia y artículo en GitHub →",
+    "read.note":"Esta página es un complemento en lenguaje claro del artículo. Cada figura y estadística proviene de la implementación de referencia publicada."
+  }
+};
+/* demo dynamic strings (all langs incl. en) */
+const STR = {
+  en:{lsbNormal:"NORMAL VIEW  (what your eye sees)",lsbAmp:"AMPLIFIED LOWEST BIT  (the hidden seal data)",
+      lsbHintRev:"That checkerboard is the hidden block data, amplified 200×. In the normal view it shifts each colour by ≤1/256 — invisible.",
+      lsbHintNorm:"Both halves look identical to your eye. Click “Reveal” to amplify the lowest bit and see the data hiding in plain sight.",
+      cSingle:"Single chain (old schemes) — break one, lose the rest →",cGrid:"Grid of chains (PBC) — break stays inside its tile",
+      tA:"tile A",tB:"tile B",tC:"tile C",crop:"⤧ drag to crop"},
+  fr:{lsbNormal:"VUE NORMALE  (ce que voit l'œil)",lsbAmp:"BIT FAIBLE AMPLIFIÉ  (les données du sceau caché)",
+      lsbHintRev:"Cet échiquier est la donnée de bloc cachée, amplifiée 200×. En vue normale, elle décale chaque couleur de ≤1/256 — invisible.",
+      lsbHintNorm:"Les deux moitiés semblent identiques à l'œil. Cliquez sur « Révéler » pour amplifier le bit le plus faible et voir les données cachées en pleine vue.",
+      cSingle:"Chaîne unique (anciens schémas) — brisez-en un, perdez le reste →",cGrid:"Grille de chaînes (PBC) — la rupture reste dans sa tuile",
+      tA:"tuile A",tB:"tuile B",tC:"tuile C",crop:"⤧ glisser pour recadrer"},
+  es:{lsbNormal:"VISTA NORMAL  (lo que ve tu ojo)",lsbAmp:"BIT BAJO AMPLIFICADO  (los datos del sello oculto)",
+      lsbHintRev:"Ese tablero es el dato de bloque oculto, amplificado 200×. En la vista normal desplaza cada color ≤1/256 — invisible.",
+      lsbHintNorm:"Ambas mitades parecen idénticas a tu ojo. Pulsa «Revelar» para amplificar el bit más bajo y ver los datos ocultos a plena vista.",
+      cSingle:"Cadena única (esquemas antiguos) — rompe uno, pierde el resto →",cGrid:"Cuadrícula de cadenas (PBC) — la rotura queda en su mosaico",
+      tA:"mosaico A",tB:"mosaico B",tC:"mosaico C",crop:"⤧ arrastra para recortar"}
+};
+
+let LANG='en';
+const ORIG={};
+function t(k){return (STR[LANG]&&STR[LANG][k])||STR.en[k];}
+function cacheOriginals(){document.querySelectorAll('[data-i18n]').forEach(el=>{ORIG[el.dataset.i18n]=el.innerHTML;});}
+function applyLang(l){
+  LANG=l;document.documentElement.lang=l;
+  const dict=I18N[l];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.dataset.i18n;
+    if(l==='en'){el.innerHTML=ORIG[k];}
+    else if(dict&&dict[k]!=null){el.innerHTML=dict[k];}
+    else{el.innerHTML=ORIG[k];}
+  });
+  // nav tooltips
+  document.querySelectorAll('#dots a').forEach(a=>{const k=a.dataset.navkey;
+    const span=a.querySelector('span');if(span)span.textContent=(l!=='en'&&dict&&dict[k])?dict[k]:a.dataset.navlabel;});
+  document.querySelectorAll('.langbar button').forEach(b=>b.classList.toggle('on',b.dataset.lang===l));
+  try{localStorage.setItem('pbc_lang',l);}catch(e){}
+  if(window._redrawDemos)window._redrawDemos();
+}
+
+/* ---------- progress bar + dot nav + reveal ---------- */
+(function(){
+  const bar=document.getElementById('bar');
+  const secs=[...document.querySelectorAll('[data-nav]')];
+  const dots=document.getElementById('dots');
+  secs.forEach(s=>{
+    const navkey=s.dataset.nav;            // e.g. nav.problem
+    const label=(I18N.en_fallback&&0)||navLabelFallback(navkey);
+    const a=document.createElement('a');a.href='#'+s.id;
+    a.dataset.id=s.id;a.dataset.navkey=navkey;a.dataset.navlabel=label;
+    a.innerHTML='<span>'+label+'</span>';dots.appendChild(a);
+  });
+  function navLabelFallback(k){ // English labels live here
+    const m={"nav.start":"Start","nav.problem":"The problem","nav.idea":"The big idea","nav.tiles":"Tiles & chains",
+      "nav.tamper":"Catch tampering","nav.isolation":"No cascade","nav.ledger":"Edit ledger","nav.forest":"Surviving crops",
+      "nav.scope":"Where it works","nav.compare":"vs C2PA / AI","nav.evidence":"The evidence","nav.limits":"Honest limits","nav.read":"Read more"};
+    return m[k]||k;
+  }
+  const dotEls=[...dots.children];
+  function onScroll(){
+    const h=document.documentElement;
+    const sc=h.scrollTop/(h.scrollHeight-h.clientHeight);
+    bar.style.width=(sc*100)+'%';
+    let cur=secs[0];
+    for(const s of secs){if(s.getBoundingClientRect().top<=window.innerHeight*0.4)cur=s;}
+    dotEls.forEach(d=>d.classList.toggle('on',d.dataset.id===cur.id));
+  }
+  document.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+})();
+
+/* ---------- language wiring ---------- */
+cacheOriginals();
+document.querySelectorAll('.langbar button').forEach(b=>b.addEventListener('click',()=>applyLang(b.dataset.lang)));
+(function(){let l='en';try{l=localStorage.getItem('pbc_lang')||'';}catch(e){}
+  if(!l){const n=(navigator.language||'en').slice(0,2);if(I18N[n])l=n;else l='en';}
+  applyLang(l);})();
+
+/* ---------- helpers ---------- */
+function rounded(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+/* ---------- HERO field ---------- */
+(function(){
+  const cv=document.getElementById('heroCanvas');const ctx=cv.getContext('2d');
+  let W,H,cells;const S=46;
+  function build(){const d=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;
+    cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);
+    const cols=Math.ceil(W/S),rows=Math.ceil(H/S);cells=[];
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)cells.push({x:x*S,y:y*S,ph:Math.random()*6.28,sp:.4+Math.random()*.8});}
+  function draw(time){ctx.clearRect(0,0,W,H);
+    for(const c of cells){const a=(Math.sin(time*.001*c.sp+c.ph)+1)/2;
+      ctx.globalAlpha=.04+a*.20;ctx.strokeStyle=a>.7?'#34d399':'#2b3a4a';ctx.lineWidth=1;
+      rounded(ctx,c.x+4,c.y+4,S-8,S-8,5);ctx.stroke();
+      if(a>.86){ctx.globalAlpha=.12;ctx.fillStyle='#34d399';ctx.fill();}}
+    ctx.globalAlpha=1;requestAnimationFrame(draw);}
+  build();requestAnimationFrame(draw);addEventListener('resize',build);
+})();
+
+/* ---------- DEMO 1 : LSB reveal ---------- */
+let lsbDraw;
+(function(){
+  const cv=document.getElementById('lsbCanvas');const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;let amp=false;
+  function scene(off){
+    const img=ctx.createImageData(W,H);const d=img.data;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+      const i=(y*W+x)*4;
+      let r=60+120*(y/H),g=110+90*(1-y/H),b=170+60*(1-y/H);
+      const sx=150,sy=70;if((x-sx)**2+(y-sy)**2<900){r=250;g=230;b=120;}
+      if(y>150){r=40+30*Math.sin(x*.05);g=90+20*Math.sin(x*.07);b=55;}
+      r=(r&~1)|(((x>>3)+(y>>3))&1);g=(g&~1)|((x^y)&1);b=(b&~1)|(((x>>2))&1);
+      if(off){r=(r&1)?255:0;g=(g&1)?255:0;b=(b&1)?255:0;}
+      d[i]=r;d[i+1]=g;d[i+2]=b;d[i+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+    ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,0,W,26);
+    ctx.fillStyle='#cfe';ctx.font='13px ui-monospace,monospace';
+    ctx.fillText(off?t('lsbAmp'):t('lsbNormal'),12,17);
+  }
+  lsbDraw=()=>scene(amp);
+  scene(false);
+  const hint=document.getElementById('lsbHint');
+  document.getElementById('lsbReveal').onclick=()=>{amp=true;scene(true);hint.textContent=t('lsbHintRev');};
+  document.getElementById('lsbReset').onclick=()=>{amp=false;scene(false);hint.textContent=t('lsbHintNorm');};
+})();
+
+/* ---------- DEMO 2 : click-to-tamper ---------- */
+let tamperDraw;
+(function(){
+  const cv=document.getElementById('tamperCanvas');const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,COLS=6,ROWS=4;const tw=W/COLS,th=H/ROWS;let tam=new Set();
+  function base(x,y){return [70+150*(x/W)|0,90+120*(y/H)|0,150+80*(1-x/W)|0];}
+  function draw(){
+    for(let gy=0;gy<ROWS;gy++)for(let gx=0;gx<COLS;gx++){
+      const id=gy*COLS+gx;const x=gx*tw,y=gy*th;const tt=tam.has(id);
+      if(tt){const im=ctx.createImageData(tw,th);for(let i=0;i<im.data.length;i+=4){
+          im.data[i]=Math.random()*255|0;im.data[i+1]=Math.random()*255|0;im.data[i+2]=Math.random()*255|0;im.data[i+3]=255;}
+        ctx.putImageData(im,x,y);
+      }else{const c=base(x+tw/2,y+th/2);ctx.fillStyle=`rgb(${c[0]},${c[1]},${c[2]})`;ctx.fillRect(x,y,tw,th);}
+      ctx.lineWidth=3;ctx.strokeStyle=tt?'#f87171':'#34d399';ctx.strokeRect(x+1.5,y+1.5,tw-3,th-3);
+      ctx.fillStyle=tt?'rgba(248,113,113,.92)':'rgba(52,211,153,.85)';
+      const lbl=tt?'RED':'GREEN';ctx.font='bold 11px ui-monospace,monospace';
+      const wln=ctx.measureText(lbl).width+10;rounded(ctx,x+6,y+6,wln,16,4);ctx.fill();
+      ctx.fillStyle=tt?'#fff':'#04110b';ctx.fillText(lbl,x+11,y+18);
+    }
+    document.getElementById('tCount').textContent=tam.size;
+    document.getElementById('tFp').textContent='0';
+    document.getElementById('tRate').textContent='100%';
+  }
+  tamperDraw=draw;
+  cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect();
+    const x=(e.clientX-r.left)*(W/r.width),y=(e.clientY-r.top)*(H/r.height);
+    const id=(Math.floor(y/th))*COLS+Math.floor(x/tw);
+    if(tam.has(id))tam.delete(id);else tam.add(id);draw();});
+  document.getElementById('tReset').onclick=()=>{tam.clear();draw();};
+  draw();
+})();
+
+/* ---------- DEMO 3 : cascade vs grid ---------- */
+let cascadeDraw;
+(function(){
+  const cv=document.getElementById('cascadeCanvas');const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,N=10;let single=null,grid=null;
+  const TILES=[[0,1,2,3],[4,5,6],[7,8,9]];
+  function tileOf(i){for(let t=0;t<TILES.length;t++)if(TILES[t].includes(i))return t;return 0;}
+  function drawRow(y,label,brokenFn,groups){
+    ctx.fillStyle='#9aa8b6';ctx.font='13px system-ui,sans-serif';ctx.fillText(label,16,y-14);
+    const bw=44,gap=8,x0=16;
+    for(let i=0;i<N;i++){const x=x0+i*(bw+gap);const broke=brokenFn(i);
+      ctx.fillStyle=broke?'#f87171':'#34d399';rounded(ctx,x,y,bw,40,7);ctx.fill();
+      if(i<N-1){ctx.strokeStyle=broke||brokenFn(i+1)?'#f8717180':'#34d39955';
+        if(groups&&tileOf(i)!==tileOf(i+1))ctx.strokeStyle='#33414f';
+        ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+bw,y+20);ctx.lineTo(x+bw+gap,y+20);ctx.stroke();}
+      ctx.fillStyle=broke?'#3a0d0d':'#04110b';ctx.font='bold 12px ui-monospace,monospace';ctx.fillText(i,x+bw/2-3,y+25);}
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    drawRow(60,t('cSingle'),i=>single!==null&&i>=single,false);
+    drawRow(190,t('cGrid'),i=>grid!==null&&tileOf(i)===tileOf(grid)&&i>=grid,true);
+    ctx.strokeStyle='#33414f';ctx.setLineDash([4,4]);
+    [4,7].forEach(i=>{const x=16+i*(44+8)-4;ctx.beginPath();ctx.moveTo(x,180);ctx.lineTo(x,245);ctx.stroke();});
+    ctx.setLineDash([]);ctx.fillStyle='#6b7a89';ctx.font='12px system-ui,sans-serif';
+    ctx.fillText(t('tA'),24,262);ctx.fillText(t('tB'),24+4*52,262);ctx.fillText(t('tC'),24+7*52,262);
+  }
+  cascadeDraw=draw;
+  function hit(e){const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*(W/r.width),y=(e.clientY-r.top)*(H/r.height);
+    const bw=44,gap=8,x0=16;const i=Math.floor((x-x0)/(bw+gap));if(i<0||i>=N)return null;
+    if(y>50&&y<100)return['s',i];if(y>180&&y<230)return['g',i];return null;}
+  cv.addEventListener('click',e=>{const h=hit(e);if(!h)return;
+    if(h[0]==='s')single=(single===h[1])?null:h[1];else grid=(grid===h[1])?null:h[1];draw();});
+  document.getElementById('cReset').onclick=()=>{single=null;grid=null;draw();};
+  document.getElementById('cRandom').onclick=()=>{const i=Math.floor(Math.random()*N);single=i;grid=i;draw();};
+  draw();
+})();
+
+/* ---------- DEMO 4 : crop simulator ---------- */
+let cropDraw;
+(function(){
+  const cv=document.getElementById('cropCanvas');const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;let seed=1337;function rnd(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;}
+  const N=260;const pts=[];for(let i=0;i<N;i++)pts.push({x:18+rnd()*(W-36),y:18+rnd()*(H-36)});
+  let crop={x:W*0.32,y:H*0.18,w:W*0.42,h:H*0.5};let drag=null;
+  function draw(){
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#0e141d';ctx.fillRect(0,0,W,H);
+    let surv=0;
+    for(const p of pts){const inside=p.x>=crop.x&&p.x<=crop.x+crop.w&&p.y>=crop.y&&p.y<=crop.y+crop.h;
+      if(inside)surv++;ctx.beginPath();ctx.arc(p.x,p.y,3.4,0,6.29);ctx.fillStyle=inside?'#34d399':'#3a4756';ctx.fill();}
+    ctx.save();ctx.fillStyle='rgba(0,0,0,.45)';ctx.beginPath();ctx.rect(0,0,W,H);ctx.rect(crop.x,crop.y,crop.w,crop.h);ctx.fill('evenodd');ctx.restore();
+    ctx.strokeStyle='#38bdf8';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(crop.x,crop.y,crop.w,crop.h);ctx.setLineDash([]);
+    ctx.fillStyle='#38bdf8';ctx.font='12px ui-monospace,monospace';ctx.fillText(t('crop'),crop.x+8,crop.y+18);
+    document.getElementById('fSurv').textContent=surv+' / '+N+'  ('+(surv/N*100).toFixed(0)+'%)';
+  }
+  cropDraw=draw;
+  function pos(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*(W/r.width),y:(e.clientY-r.top)*(H/r.height)};}
+  cv.addEventListener('pointerdown',e=>{const p=pos(e);
+    if(p.x>=crop.x&&p.x<=crop.x+crop.w&&p.y>=crop.y&&p.y<=crop.y+crop.h){drag={dx:p.x-crop.x,dy:p.y-crop.y};cv.setPointerCapture(e.pointerId);}});
+  cv.addEventListener('pointermove',e=>{if(!drag)return;const p=pos(e);
+    crop.x=Math.max(0,Math.min(W-crop.w,p.x-drag.dx));crop.y=Math.max(0,Math.min(H-crop.h,p.y-drag.dy));draw();});
+  cv.addEventListener('pointerup',()=>drag=null);
+  document.getElementById('fReset').onclick=()=>{crop={x:W*0.32,y:H*0.18,w:W*0.42,h:H*0.5};draw();};
+  draw();
+})();
+
+window._redrawDemos=function(){try{lsbDraw&&lsbDraw();tamperDraw&&tamperDraw();cascadeDraw&&cascadeDraw();cropDraw&&cropDraw();}catch(e){}};
+window._redrawDemos();
+</script>
+</body>
+</html>
