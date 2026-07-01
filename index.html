@@ -397,6 +397,7 @@
     <p style="margin-top:12px"><a href="https://github.com/flegare/pixel-block-chain" data-i18n="read.link">Reference code &amp; paper on GitHub →</a></p>
     <hr class="soft">
     <p class="note" data-i18n="read.note">This page is a plain-language companion to the paper. Every figure and statistic comes from the published reference implementation.</p>
+    <p class="note" data-i18n="read.privacy" style="margin-top:4px">Privacy: this site uses cookieless, privacy-friendly analytics — no cookies, no personal data, no cross-site tracking.</p>
   </div>
 </footer>
 
@@ -485,7 +486,8 @@ const I18N = {
     "limits.l4":"<strong>Modifications subtiles.</strong> Le banc d'essai écrase les régions avec des pixels aléatoires ; les modifications soignées qui préservent le bit de poids faible ne sont pas encore testées.",
     "limits.note":"Chacune de ces limites est une piste de travaux futurs clairement définie, pas un défaut caché.",
     "read.h2":"Lire l'article original","read.link":"Code de référence et article sur GitHub →",
-    "read.note":"Cette page est un compagnon en langage clair de l'article. Chaque figure et statistique provient de l'implémentation de référence publiée."
+    "read.note":"Cette page est un compagnon en langage clair de l'article. Chaque figure et statistique provient de l'implémentation de référence publiée.",
+    "read.privacy":"Confidentialité : ce site utilise des statistiques respectueuses de la vie privée, sans témoins (cookies) — aucun témoin, aucune donnée personnelle, aucun suivi intersites."
   },
   es:{
     "meta.title":"Pixel Block Chain — Cómo funciona, en lenguaje sencillo",
@@ -569,7 +571,8 @@ const I18N = {
     "limits.l4":"<strong>Ediciones sutiles.</strong> El banco de pruebas sobrescribe regiones con píxeles aleatorios; las ediciones cuidadas que preservan el bit más bajo aún no se han probado.",
     "limits.note":"Cada uno de estos es una línea de trabajo futuro bien definida, no un defecto oculto.",
     "read.h2":"Lee el original","read.link":"Código de referencia y artículo en GitHub →",
-    "read.note":"Esta página es un complemento en lenguaje claro del artículo. Cada figura y estadística proviene de la implementación de referencia publicada."
+    "read.note":"Esta página es un complemento en lenguaje claro del artículo. Cada figura y estadística proviene de la implementación de referencia publicada.",
+    "read.privacy":"Privacidad: este sitio usa analítica respetuosa con la privacidad, sin cookies — sin cookies, sin datos personales, sin rastreo entre sitios."
   }
 };
 /* demo dynamic strings (all langs incl. en) */
@@ -800,6 +803,23 @@ let cropDraw;
 
 window._redrawDemos=function(){try{lsbDraw&&lsbDraw();tamperDraw&&tamperDraw();cascadeDraw&&cascadeDraw();cropDraw&&cropDraw();}catch(e){}};
 window._redrawDemos();
+</script>
+
+<!-- ===== Cloudflare Web Analytics (cookieless · no consent banner required) ===== -->
+<script>
+  (function(){
+    // Paste your Cloudflare Web Analytics beacon token between the quotes below.
+    // Cloudflare dashboard → Analytics & Logs → Web Analytics → Add a site
+    //   → pbc.mobidroid.com → "Manual" → copy the token from data-cf-beacon.
+    var CF_TOKEN = "";
+    if (CF_TOKEN) {
+      var s = document.createElement("script");
+      s.defer = true;
+      s.src = "https://static.cloudflareinsights.com/beacon.min.js";
+      s.setAttribute("data-cf-beacon", '{"token":"' + CF_TOKEN + '"}');
+      document.head.appendChild(s);
+    }
+  })();
 </script>
 </body>
 </html>
