@@ -802,48 +802,83 @@ window._redrawDemos=function(){try{lsbDraw&&lsbDraw();tamperDraw&&tamperDraw();c
 window._redrawDemos();
 </script>
 
-<!-- ===== Mesure d'audience — Google Analytics 4 =====
-     INACTIF tant que GA4_ID est vide: aucun script tiers n'est chargé, aucune
-     requête ne part, rien n'est mesuré.
+<!-- ===== Mesure d'audience — Google Analytics 4, sous consentement =====
+     INACTIF tant que GA4_ID est vide, et ensuite inactif tant que le visiteur
+     n'a pas accepte: aucun script tiers, aucune requete, rien de mesure.
 
-     Pour l'activer: coller l'identifiant de mesure entre les guillemets ci-dessous.
-       Google Analytics → Admin → Flux de données → Web → « ID de mesure » (G-XXXXXXXXXX)
+     Pour activer: coller l'identifiant de mesure ci-dessous.
+       Google Analytics -> Admin -> Flux de donnees -> Web -> ID de mesure
 
-     NE PAS réutiliser G-WY7KLX4JJ6: c'est la propriété My Job Odyssey. Y envoyer le
-     trafic de PBC mélangerait deux produits dans les mêmes rapports et fausserait
-     les données d'un site qui, lui, est réellement suivi. PBC a besoin de sa propre
-     propriété.
+     NE PAS reutiliser G-WY7KLX4JJ6 (propriete My Job Odyssey): melanger deux
+     produits dans les memes rapports fausserait un site reellement suivi.
 
-     La mention de confidentialité ci-dessous s'affiche UNIQUEMENT si un identifiant
-     est posé. Le 2026-09-09, cette page affirmait utiliser des statistiques alors
-     qu'aucune ne tournait; lier la phrase à l'activation rend cet écart impossible. -->
-<p class="note" id="gaPrivacy" hidden style="margin-top:4px"></p>
+     POURQUOI SOUS CONSENTEMENT. mobidroid.com applique deja cette regle
+     (components/ConsentBanner.tsx, cle localStorage "mobidroid_consent"):
+     GA n'est injecte qu'apres accord explicite. Deux sites de la meme famille
+     ne peuvent pas avoir deux postures differentes sur la vie privee, et on
+     s'aligne sur la plus stricte plutot que d'en inventer une plus faible.
+     Meme nom de cle par coherence — les origines etant distinctes, le choix
+     ne se propage pas de l'un a l'autre. -->
 <script>
   (function () {
     var GA4_ID = "";
     if (!GA4_ID) return;
 
-    var s = document.createElement("script");
-    s.async = true;
-    s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA4_ID);
-    document.head.appendChild(s);
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function () { window.dataLayer.push(arguments); };
-    gtag("js", new Date());
-    // anonymize_ip: exigé pour rester proche du minimum nécessaire (Loi 25).
-    gtag("config", GA4_ID, { anonymize_ip: true });
-
-    var TEXTE = {
-      fr: "Confidentialité : cette page mesure l'audience avec Google Analytics (adresse IP anonymisée). Aucune donnée personnelle n'est collectée.",
-      en: "Privacy: this page measures traffic with Google Analytics (IP anonymized). No personal data is collected.",
-      es: "Privacidad: esta página mide el tráfico con Google Analytics (IP anonimizada). No se recopilan datos personales."
+    var CLE = "mobidroid_consent";
+    var T = {
+      fr: { txt: "Nous aimerions mesurer l'audience de cette page avec Google Analytics. Aucune donnee personnelle, adresse IP anonymisee.", ok: "Accepter", non: "Refuser" },
+      en: { txt: "We would like to measure traffic on this page with Google Analytics. No personal data, IP anonymized.", ok: "Accept", non: "Decline" },
+      es: { txt: "Nos gustaria medir el trafico de esta pagina con Google Analytics. Sin datos personales, IP anonimizada.", ok: "Aceptar", non: "Rechazar" }
     };
-    var p = document.getElementById("gaPrivacy");
-    if (p) {
-      var l = (document.documentElement.lang || "en").slice(0, 2);
-      p.textContent = TEXTE[l] || TEXTE.en;
-      p.hidden = false;
+    function lang() { return T[(document.documentElement.lang || "en").slice(0, 2)] ? (document.documentElement.lang || "en").slice(0, 2) : "en"; }
+
+    function injecter() {
+      if (document.getElementById("gtag-script")) return;
+      var s = document.createElement("script");
+      s.id = "gtag-script"; s.async = true;
+      s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA4_ID);
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { window.dataLayer.push(arguments); };
+      gtag("js", new Date());
+      gtag("config", GA4_ID, { anonymize_ip: true });
     }
+
+    var choix = null;
+    try { choix = localStorage.getItem(CLE); } catch (e) {}
+    if (choix === "granted") { injecter(); return; }
+    if (choix === "denied") return;
+
+    function banniere() {
+      var t = T[lang()];
+      var b = document.createElement("div");
+      b.setAttribute("role", "dialog");
+      b.setAttribute("aria-label", t.txt);
+      b.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;max-width:640px;margin:0 auto;" +
+        "background:#121821;border:1px solid #2a3543;border-radius:12px;padding:14px 16px;color:#e9eff6;" +
+        "font:14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;display:flex;gap:12px;align-items:center;flex-wrap:wrap;" +
+        "box-shadow:0 12px 32px -12px rgba(0,0,0,.7)";
+      var p = document.createElement("span");
+      p.textContent = t.txt; p.style.cssText = "flex:1 1 260px";
+      var mk = function (label, fond, encre, statut) {
+        var x = document.createElement("button");
+        x.type = "button"; x.textContent = label;
+        x.style.cssText = "border:1px solid #2a3543;background:" + fond + ";color:" + encre +
+          ";border-radius:999px;padding:.45rem 1rem;font:inherit;font-weight:650;cursor:pointer";
+        x.addEventListener("click", function () {
+          try { localStorage.setItem(CLE, statut); } catch (e) {}
+          if (statut === "granted") injecter();
+          b.remove();
+        });
+        return x;
+      };
+      b.appendChild(p);
+      b.appendChild(mk(t.non, "transparent", "#e9eff6", "denied"));
+      b.appendChild(mk(t.ok, "#34d399", "#08210f", "granted"));
+      document.body.appendChild(b);
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", banniere);
+    else banniere();
   })();
 </script>
 </body>
