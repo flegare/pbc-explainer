@@ -193,7 +193,7 @@
         <div class="hint" id="lsbHint" data-i18n="lsb.hint0">Both halves look identical to your eye. Click “Reveal” to amplify the lowest bit 200× and see the data that's hiding in plain sight.</div>
       </div>
     </div>
-    <div class="analogy" data-i18n="idea.analogy"><b>Why it's invisible:</b> changing the last bit of a colour shifts it by at most 1 step out of 256 — a difference of about <strong>0.4%</strong>. Measured across the whole image that's a quality score (PSNR) of <strong>51.2 dB</strong>, far beyond what the eye can detect.</div>
+    <div class="analogy" data-i18n="idea.analogy"><b>Why it's invisible:</b> changing the last bit of a colour shifts it by at most 1 step out of 256 — <strong>0.4%</strong> of the full range. Measured across the whole image that's a quality score (PSNR) of <strong>51.2 dB</strong>, far beyond what the eye can detect.</div>
     <details class="deep"><summary><span class="lbl" data-closed="Go deeper — the real mechanism" data-open="Hide the details"></span></summary><div class="body">
       <p data-i18n="idea.deep">This is classic <b>LSB (least-significant-bit) steganography</b>. PBC writes into the <code>k</code> lowest bits of each RGB channel, default <code>k=1</code> → 3 hidden bits per pixel. Each block is 32 bytes and occupies ~86 pixels. A 128×128 tile holds up to 190 blocks — far more than a full editing session needs. Higher <code>k</code> (2 or 3) stores more history but lowers PSNR (43.8 dB, 37.3 dB).</p>
     </div></details>
@@ -301,7 +301,7 @@
         <div class="controls">
           <button class="ui" id="fReset" data-i18n="forest.resetBtn">Reset crop</button>
         </div>
-        <div class="hint" data-i18n="forest.hint">Drag the highlighted box to move the crop. The paper measures <strong>41–44%</strong> survival after removing 60–80% of the image — where the regular grid recovers nothing.</div>
+        <div class="hint" data-i18n="forest.hint">Drag the highlighted box to move the crop. The paper measures <strong>41.1–44.6%</strong> survival after removing 60–80% of the image — where the regular grid recovers nothing.</div>
       </div>
     </div>
     <figure class="figrow">
@@ -366,7 +366,7 @@
       <div class="stat"><div class="n">51.2<span style="font-size:15px">dB</span></div><div class="l" data-i18n="evidence.s1">Image quality (PSNR) — visually identical</div></div>
       <div class="stat"><div class="n">100%</div><div class="l" data-i18n="evidence.s2">Tampered tiles correctly caught</div></div>
       <div class="stat"><div class="n">0%</div><div class="l" data-i18n="evidence.s3">False alarms on clean tiles</div></div>
-      <div class="stat"><div class="n">41–44%</div><div class="l" data-i18n="evidence.s4">Seals surviving a severe crop (Forest)</div></div>
+      <div class="stat"><div class="n">41.1–44.6%</div><div class="l" data-i18n="evidence.s4">Seals surviving a severe crop (Forest)</div></div>
     </div>
     <p data-i18n="evidence.p2">And a property you can't fake with statistics — it's <em>proven mathematically</em>: a break in one tile can never affect the verdict on another. That guarantee is what lets the localization be exact instead of approximate.</p>
   </div>
@@ -425,7 +425,7 @@ const I18N = {
     "demo1.head":"Le changement vous est invisible — mais il est bien là",
     "lsb.reveal":"Révéler la couche cachée","lsb.resetBtn":"Vue normale",
     "lsb.hint0":"Les deux moitiés semblent identiques à l'œil. Cliquez sur « Révéler » pour amplifier le bit le plus faible 200× et voir les données cachées en pleine vue.",
-    "idea.analogy":"<b>Pourquoi c'est invisible :</b> modifier le dernier bit d'une couleur la décale d'au plus 1 cran sur 256 — un écart d'environ <strong>0,4 %</strong>. Mesuré sur toute l'image, cela donne une qualité (PSNR) de <strong>51,2 dB</strong>, bien au-delà du seuil de perception de l'œil.",
+    "idea.analogy":"<b>Pourquoi c'est invisible :</b> modifier le dernier bit d'une couleur la décale d'au plus 1 cran sur 256 — <strong>0,4 %</strong> de l'échelle complète. Mesuré sur toute l'image, cela donne une qualité (PSNR) de <strong>51,2 dB</strong>, bien au-delà du seuil de perception de l'œil.",
     "idea.deep":"C'est de la <b>stéganographie LSB</b> (bit de poids faible) classique. PBC écrit dans les <code>k</code> bits les plus faibles de chaque canal RVB, par défaut <code>k=1</code> → 3 bits cachés par pixel. Chaque bloc fait 32 octets et occupe ~86 pixels. Une tuile 128×128 contient jusqu'à 190 blocs — bien plus qu'une session d'édition complète n'en exige. Un <code>k</code> plus élevé (2 ou 3) stocke plus d'historique mais réduit le PSNR (43,8 dB, 37,3 dB).",
     "tiles.eyebrow":"La structure","tiles.h2":"Une grille de chaînes indépendantes",
     "tiles.p1":"PBC ne crée pas un seul sceau géant pour toute l'image. Il découpe l'image en une <strong>grille de tuiles</strong> (128×128 pixels chacune) et donne à <em>chaque tuile sa propre chaîne de sceaux</em>. Aucune chaîne de tuile ne fait référence à une autre.",
@@ -455,7 +455,7 @@ const I18N = {
     "forest.p2":"Recadrez le champ comme vous voulez — il reste toujours quelques arbres debout. Faites glisser la zone de recadrage ci-dessous et observez combien de sceaux survivent.",
     "demo4.head":"Simulateur de recadrage · « forêt » de sceaux dispersés",
     "forest.r1":"Sceaux survivants","forest.r2":"Le mode grille donnerait","forest.resetBtn":"Réinitialiser le recadrage",
-    "forest.hint":"Faites glisser la zone surlignée pour déplacer le recadrage. L'article mesure <strong>41–44 %</strong> de survie après suppression de 60–80 % de l'image — là où la grille régulière ne récupère rien.",
+    "forest.hint":"Faites glisser la zone surlignée pour déplacer le recadrage. L'article mesure <strong>41,1–44,6 %</strong> de survie après suppression de 60–80 % de l'image — là où la grille régulière ne récupère rien.",
     "forest.capA":"(a) Sceaux dispersés","forest.capB":"(b) Après un recadrage sévère","forest.capC":"(c) Survivants récupérés",
     "forest.realcap":"Exécution réelle du code public : 442 sceaux sur 1000 (44,2 %) récupérés après un recadrage non aligné.",
     "scope.eyebrow":"Être honnête sur les limites","scope.h2":"Où ça marche — et où ça ne marche pas",
@@ -510,7 +510,7 @@ const I18N = {
     "demo1.head":"El cambio te resulta invisible — pero ahí está",
     "lsb.reveal":"Revelar la capa oculta","lsb.resetBtn":"Vista normal",
     "lsb.hint0":"Ambas mitades parecen idénticas a tu ojo. Pulsa «Revelar» para amplificar el bit más bajo 200× y ver los datos que se esconden a plena vista.",
-    "idea.analogy":"<b>Por qué es invisible:</b> cambiar el último bit de un color lo desplaza como mucho 1 paso de 256 — una diferencia de cerca del <strong>0,4 %</strong>. Medido en toda la imagen, eso da una calidad (PSNR) de <strong>51,2 dB</strong>, muy por encima de lo que el ojo detecta.",
+    "idea.analogy":"<b>Por qué es invisible:</b> cambiar el último bit de un color lo desplaza como mucho 1 paso de 256 — el <strong>0,4 %</strong> de la escala completa. Medido en toda la imagen, eso da una calidad (PSNR) de <strong>51,2 dB</strong>, muy por encima de lo que el ojo detecta.",
     "idea.deep":"Esto es <b>esteganografía LSB</b> (bit menos significativo) clásica. PBC escribe en los <code>k</code> bits más bajos de cada canal RGB, por defecto <code>k=1</code> → 3 bits ocultos por píxel. Cada bloque ocupa 32 bytes y ~86 píxeles. Un mosaico de 128×128 contiene hasta 190 bloques — mucho más de lo que necesita una sesión de edición completa. Un <code>k</code> mayor (2 o 3) guarda más historial pero baja el PSNR (43,8 dB, 37,3 dB).",
     "tiles.eyebrow":"La estructura","tiles.h2":"Una cuadrícula de cadenas independientes",
     "tiles.p1":"PBC no crea un único sello gigante para toda la imagen. Divide la imagen en una <strong>cuadrícula de mosaicos</strong> (128×128 píxeles cada uno) y da a <em>cada mosaico su propia cadena de sellos</em>. Ninguna cadena de un mosaico hace referencia a otro.",
@@ -540,7 +540,7 @@ const I18N = {
     "forest.p2":"Recorta el campo como quieras — siempre quedan algunos árboles en pie. Arrastra el recuadro de recorte de abajo y observa cuántos sellos sobreviven.",
     "demo4.head":"Simulador de recorte · «bosque» de sellos dispersos",
     "forest.r1":"Sellos que sobreviven","forest.r2":"El modo cuadrícula daría","forest.resetBtn":"Restablecer recorte",
-    "forest.hint":"Arrastra el recuadro resaltado para mover el recorte. El artículo mide <strong>41–44 %</strong> de supervivencia tras eliminar 60–80 % de la imagen — donde la cuadrícula regular no recupera nada.",
+    "forest.hint":"Arrastra el recuadro resaltado para mover el recorte. El artículo mide <strong>41,1–44,6 %</strong> de supervivencia tras eliminar 60–80 % de la imagen — donde la cuadrícula regular no recupera nada.",
     "forest.capA":"(a) Sellos dispersos","forest.capB":"(b) Tras un recorte severo","forest.capC":"(c) Supervivientes recuperados",
     "forest.realcap":"Ejecución real del código público: 442 de 1000 sellos (44,2 %) recuperados de un recorte no alineado.",
     "scope.eyebrow":"Ser honestos con los límites","scope.h2":"Dónde funciona — y dónde no",
