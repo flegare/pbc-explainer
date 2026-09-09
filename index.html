@@ -802,23 +802,47 @@ window._redrawDemos=function(){try{lsbDraw&&lsbDraw();tamperDraw&&tamperDraw();c
 window._redrawDemos();
 </script>
 
-<!-- ===== Cloudflare Web Analytics (cookieless · no consent banner required) ===== -->
+<!-- ===== Mesure d'audience — Google Analytics 4 =====
+     INACTIF tant que GA4_ID est vide: aucun script tiers n'est chargé, aucune
+     requête ne part, rien n'est mesuré.
+
+     Pour l'activer: coller l'identifiant de mesure entre les guillemets ci-dessous.
+       Google Analytics → Admin → Flux de données → Web → « ID de mesure » (G-XXXXXXXXXX)
+
+     NE PAS réutiliser G-WY7KLX4JJ6: c'est la propriété My Job Odyssey. Y envoyer le
+     trafic de PBC mélangerait deux produits dans les mêmes rapports et fausserait
+     les données d'un site qui, lui, est réellement suivi. PBC a besoin de sa propre
+     propriété.
+
+     La mention de confidentialité ci-dessous s'affiche UNIQUEMENT si un identifiant
+     est posé. Le 2026-09-09, cette page affirmait utiliser des statistiques alors
+     qu'aucune ne tournait; lier la phrase à l'activation rend cet écart impossible. -->
+<p class="note" id="gaPrivacy" hidden style="margin-top:4px"></p>
 <script>
-  (function(){
-    // INERTE tant que CF_TOKEN est vide: aucun appel ne part, rien n'est mesuré.
-    // Si tu ajoutes un jeton, REMETS la mention de confidentialite dans la page —
-    // elle a ete retiree le 2026-09-09 parce qu'elle annoncait des statistiques
-    // qui n'existaient pas. Une page ne doit pas decrire un comportement absent.
-    // Paste your Cloudflare Web Analytics beacon token between the quotes below.
-    // Cloudflare dashboard → Analytics & Logs → Web Analytics → Add a site
-    //   → pbc.mobidroid.com → "Manual" → copy the token from data-cf-beacon.
-    var CF_TOKEN = "";
-    if (CF_TOKEN) {
-      var s = document.createElement("script");
-      s.defer = true;
-      s.src = "https://static.cloudflareinsights.com/beacon.min.js";
-      s.setAttribute("data-cf-beacon", '{"token":"' + CF_TOKEN + '"}');
-      document.head.appendChild(s);
+  (function () {
+    var GA4_ID = "";
+    if (!GA4_ID) return;
+
+    var s = document.createElement("script");
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(GA4_ID);
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    gtag("js", new Date());
+    // anonymize_ip: exigé pour rester proche du minimum nécessaire (Loi 25).
+    gtag("config", GA4_ID, { anonymize_ip: true });
+
+    var TEXTE = {
+      fr: "Confidentialité : cette page mesure l'audience avec Google Analytics (adresse IP anonymisée). Aucune donnée personnelle n'est collectée.",
+      en: "Privacy: this page measures traffic with Google Analytics (IP anonymized). No personal data is collected.",
+      es: "Privacidad: esta página mide el tráfico con Google Analytics (IP anonimizada). No se recopilan datos personales."
+    };
+    var p = document.getElementById("gaPrivacy");
+    if (p) {
+      var l = (document.documentElement.lang || "en").slice(0, 2);
+      p.textContent = TEXTE[l] || TEXTE.en;
+      p.hidden = false;
     }
   })();
 </script>
